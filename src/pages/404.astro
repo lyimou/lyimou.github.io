@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { t } from '../i18n/ui';
+
+const lang = 'en' as const;
+---
+
+<BaseLayout lang={lang} title={t(lang, 'notfound.title')}>
+  <h1>{t(lang, 'notfound.title')}</h1>
+  <p>{t(lang, 'notfound.body')}</p>
+  <p><a href="/">{t(lang, 'notfound.home')}</a></p>
+</BaseLayout>

@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { t } from '../../../i18n/ui';
+
+const lang = 'zh' as const;
+---
+
+<BaseLayout lang={lang} title={t(lang, 'projects.title')}>
+  <h1>{t(lang, 'projects.title')}</h1>
+  <p>T1 骨架 —— 項目網格與分類過濾將在 T2/T3 加入。</p>
+</BaseLayout>

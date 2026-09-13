@@ -1,0 +1,131 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens — see website-requirements.md §3.
+ * Light is the default; dark mode is class-based via `.dark` on <html>.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Typography */
+  --font-sans: 'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  --text-h1: 2.75rem; /* 44px */
+  --text-h2: 1.875rem; /* 30px */
+  --text-h3: 1.25rem; /* 20px */
+  --text-body: 1rem; /* 16px */
+  --text-small: 0.875rem; /* 14px */
+
+  /* Spacing scale (4px base) */
+  --spacing: 0.25rem;
+
+  /* Radii */
+  --radius-card: 0.75rem; /* 12px */
+  --radius-button: 0.5rem; /* 8px */
+  --radius-pill: 9999px;
+
+  /* Layout */
+  --container-page: 68.75rem; /* 1100px */
+  --measure-prose: 68ch;
+  --width-toc: 15rem; /* 240px */
+}
+
+/*
+ * Semantic colours are plain CSS variables so that a single `.dark` class
+ * flips the whole palette without duplicating utility classes.
+ */
+:root {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --border: #e7e5e4;
+  --text: #292524;
+  --text-muted: #78716c;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #eff6ff;
+  --accent: #0d9488;
+  --shadow-hover: 0 4px 12px rgb(15 23 42 / 0.08);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --primary: #60a5fa;
+  --primary-hover: #93c5fd;
+  --primary-soft: #1e3a5f;
+  --accent: #2dd4bf;
+  --shadow-hover: 0 4px 12px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-accent: var(--accent);
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    line-height: 1.75;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Respect the OS setting; the in-page 3-state switch overrides via .reduce-motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  html.reduce-motion *,
+  html.reduce-motion *::before,
+  html.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  a {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+  }
+}

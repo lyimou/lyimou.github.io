@@ -1,0 +1,29 @@
+// @ts-check
+import { defineConfig } from 'astro/config';
+import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
+import tailwindcss from '@tailwindcss/vite';
+
+// https://astro.build/config
+export default defineConfig({
+  // Root user site: https://lyimou.github.io — no `base` needed.
+  site: 'https://lyimou.github.io',
+
+  // GitHub Pages serves a static build; keep URLs canonical with a trailing slash.
+  trailingSlash: 'always',
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'zh'],
+    routing: {
+      // English lives at `/`, Chinese at `/zh/`.
+      prefixDefaultLocale: false,
+    },
+  },
+
+  integrations: [mdx(), sitemap()],
+
+  vite: {
+    plugins: [tailwindcss()],
+  },
+});

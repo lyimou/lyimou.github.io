@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { t, localizePath } from '../../i18n/ui';
+
+const lang = 'zh' as const;
+---
+
+<BaseLayout lang={lang}>
+  <section>
+    <h1>{t(lang, 'site.title')}</h1>
+    <p>{t(lang, 'site.tagline')}</p>
+  </section>
+
+  <section>
+    <h2>{t(lang, 'section.featured')}</h2>
+    <p><a href={localizePath('zh', '/projects')}>{t(lang, 'nav.projects')}</a></p>
+  </section>
+</BaseLayout>

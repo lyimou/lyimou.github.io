@@ -1,0 +1,202 @@
+---
+import '../styles/global.css';
+import { getLangFromUrl, localizePath, switchLocalePath, t, languages, type Lang } from '../i18n/ui';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Override the locale when a page is not at a locale-prefixed URL. */
+  lang?: Lang;
+}
+
+const { title, description, lang: langProp } = Astro.props;
+const url = new URL(Astro.url.pathname, Astro.site ?? 'https://lyimou.github.io');
+const lang: Lang = langProp ?? getLangFromUrl(url);
+
+const pageTitle = title ? `${title} — ${t(lang, 'site.title')}` : `${t(lang, 'site.title')} — ${t(lang, 'site.tagline')}`;
+const pageDescription = description ?? t(lang, 'site.description');
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://lyimou.github.io').href;
+
+/** The other locale, for the language switch control. */
+const otherLang: Lang = lang === 'en' ? 'zh' : 'en';
+const switchHref = switchLocalePath(Astro.url.pathname, otherLang);
+
+const navItems = [
+  { href: localizePath(lang, '/'), label: t(lang, 'nav.home') },
+  { href: localizePath(lang, '/projects'), label: t(lang, 'nav.projects') },
+  { href: localizePath(lang, '/blog'), label: t(lang, 'nav.blog') },
+  { href: localizePath(lang, '/about'), label: t(lang, 'nav.about') },
+] as const;
+
+const currentPath = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang={lang === 'zh' ? 'zh-Hant' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate" hreflang="en" href={switchLocalePath(Astro.url.pathname, 'en')} />
+    <link rel="alternate" hreflang="zh-Hant" href={switchLocalePath(Astro.url.pathname, 'zh')} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="generator" content={Astro.generator} />
+    <!--
+      Theme + motion bootstrap. Kept inline and tiny so the correct theme is
+      applied before first paint (no flash of the wrong theme).
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        try {
+          const theme = localStorage.getItem('theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (theme === 'dark' || (theme !== 'light' && prefersDark)) root.classList.add('dark');
+          const motion = localStorage.getItem('motion');
+          if (motion === 'reduced') root.classList.add('reduce-motion');
+        } catch (e) {
+          /* localStorage unavailable — fall back to defaults */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href={localizePath(lang, '/')}>{t(lang, 'site.title')}</a>
+
+        <nav aria-label="Main">
+          <ul class="nav-list">
+            {
+              navItems.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    aria-current={currentPath === item.href ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+
+        <a class="lang-switch" href={switchHref} hreflang={otherLang} rel="alternate">
+          {languages[otherLang]}
+        </a>
+      </div>
+    </header>
+
+    <main id="main" class="container">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          © {new Date().getFullYear()} {t(lang, 'site.title')} · {t(lang, 'footer.builtWith')}
+        </p>
+      </div>
+    </footer>
+
+    <style>
+      .container {
+        max-width: var(--container-page);
+        margin-inline: auto;
+        padding-inline: 1.5rem;
+      }
+
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 0.5rem 1rem;
+        z-index: 100;
+      }
+      .skip-link:focus {
+        left: 0.5rem;
+        top: 0.5rem;
+      }
+
+      .site-header {
+        border-bottom: 1px solid var(--border);
+        background: var(--bg);
+      }
+
+      .header-inner {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        min-height: 4.5rem;
+      }
+
+      .brand {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .brand:hover {
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .nav-list {
+        display: flex;
+        gap: 1.5rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .nav-list a {
+        color: var(--text-muted);
+        /* 44px minimum touch target */
+        display: inline-block;
+        padding-block: 0.75rem;
+      }
+      .nav-list a:hover,
+      .nav-list a[aria-current='page'] {
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      .lang-switch {
+        margin-left: auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-button);
+        padding: 0.375rem 0.75rem;
+        color: var(--text-muted);
+        font-size: var(--text-small);
+        min-height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      main {
+        padding-block: 4rem;
+        min-height: 60vh;
+      }
+
+      .site-footer {
+        border-top: 1px solid var(--border);
+        padding-block: 2rem;
+        color: var(--text-muted);
+        font-size: var(--text-small);
+      }
+
+      .site-footer p {
+        margin: 0;
+      }
+    </style>
+  </body>
+</html>

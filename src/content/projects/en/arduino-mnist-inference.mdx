@@ -1,0 +1,20 @@
+---
+title: 'Arduino MNIST inference'
+summary: 'Training a small dense network in Python, quantising its weights, and running digit classification on an Arduino over a serial link.'
+category: 'personal'
+tech: ['Python', 'TensorFlow', 'Arduino', 'C++', 'pyserial']
+role: 'Sole author — data pipeline, training, quantisation export and the serial harness'
+status: 'prototype'
+repo: 'https://github.com/lyimou/arduino-mnist-inference'
+featured: true
+order: 1
+lang: 'en'
+translationKey: 'arduino-mnist-inference'
+pubDate: 2026-09-13
+---
+
+{/* T1 placeholder body. Real narrative is written in T5 and must be reviewed by the author. */}
+
+The project trains a small dense network on 14×14 binarised MNIST digits, exports the
+weights as C arrays for the microcontroller, and then measures how well the board
+classifies digits it receives over serial.

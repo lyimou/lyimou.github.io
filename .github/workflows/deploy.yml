@@ -1,0 +1,67 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue instead of cancelling a live deployment.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check and build
+        run: npm run build
+
+      - name: Ensure .nojekyll is present
+        run: |
+          if [ ! -f dist/.nojekyll ]; then
+            echo "::error::dist/.nojekyll missing - GitHub Pages would strip /_astro/"
+            exit 1
+          fi
+
+      - name: Report JS payload
+        run: |
+          total=$(find dist -name '*.js' -printf '%s\n' 2>/dev/null | awk '{s+=$1} END {print s+0}')
+          echo "Total emitted JS: $total bytes" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Largest JS files" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          find dist -name '*.js' -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -15 >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

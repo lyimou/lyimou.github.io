@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # GitHub Pages runs Jekyll by default, which ignores directories that
+      # begin with an underscore — that would hide Astro's /_astro/ assets.
+      - name: Ensure .nojekyll is present in the output
+        run: |
+          if [ ! -f dist/.nojekyll ]; then
+            echo "::error::dist/.nojekyll is missing - GitHub Pages would strip /_astro/"
+            exit 1
+          fi
+          echo ".nojekyll present"
+
+      - name: Report build size and JS budget
+        run: |
+          echo "## Build output" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          du -sh dist >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "### Emitted JS" >> "$GITHUB_STEP_SUMMARY"
+          find dist -name '*.js' -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -20 >> "$GITHUB_STEP_SUMMARY" || echo "no JS emitted" >> "$GITHUB_STEP_SUMMARY"
+          total=$(find dist -name '*.js' -printf '%s\n' 2>/dev/null | awk '{s+=$1} END {print s+0}')
+          echo "Total JS bytes: $total" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: dist
+          if-no-files-found: error

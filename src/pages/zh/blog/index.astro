@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { t } from '../../../i18n/ui';
+
+const lang = 'zh' as const;
+---
+
+<BaseLayout lang={lang} title={t(lang, 'blog.title')}>
+  <h1>{t(lang, 'blog.title')}</h1>
+  <p>T1 骨架 —— 分頁、標籤與搜尋將在 T3/T4 加入。</p>
+</BaseLayout>

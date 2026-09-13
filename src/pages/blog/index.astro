@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { t } from '../../i18n/ui';
+
+const lang = 'en' as const;
+---
+
+<BaseLayout lang={lang} title={t(lang, 'blog.title')}>
+  <h1>{t(lang, 'blog.title')}</h1>
+  <p>T1 skeleton — pagination, tags and search arrive in T3/T4.</p>
+</BaseLayout>

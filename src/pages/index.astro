@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { t, localizePath } from '../i18n/ui';
+import { getCollection } from 'astro:content';
+
+const lang = 'en' as const;
+
+const featured = (await getCollection('projects'))
+  .filter((entry) => entry.data.lang === lang && entry.data.featured)
+  .sort((a, b) => a.data.order - b.data.order);
+
+/** Glob loader ids are like "en/arduino-mnist-inference". */
+const slugOf = (id: string) => id.split('/').pop() ?? id;
+---
+
+<BaseLayout lang={lang}>
+  <section>
+    <h1>{t(lang, 'site.title')}</h1>
+    <p>{t(lang, 'site.tagline')}</p>
+  </section>
+
+  <section>
+    <h2>{t(lang, 'section.featured')}</h2>
+    {featured.length === 0 ? <p>No featured projects yet.</p> : null}
+    <ul>
+      {
+        featured.map((project) => (
+          <li>
+            <a href={localizePath(lang, `/projects/${slugOf(project.id)}`)}>
+              {project.data.title}
+            </a>
+            <p>{project.data.summary}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section>
+    <h2>{t(lang, 'section.contact')}</h2>
+    <p>
+      <a href="mailto:fwhuang@connect.ust.hk">fwhuang@connect.ust.hk</a>
+      {' · '}
+      <a href="https://github.com/lyimou">GitHub</a>
+    </p>
+  </section>
+</BaseLayout>

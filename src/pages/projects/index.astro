@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { t } from '../../i18n/ui';
+
+const lang = 'en' as const;
+---
+
+<BaseLayout lang={lang} title={t(lang, 'projects.title')}>
+  <h1>{t(lang, 'projects.title')}</h1>
+  <p>T1 skeleton — the project grid and category filter arrive in T2/T3.</p>
+</BaseLayout>
