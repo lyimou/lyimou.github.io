@@ -1,10 +1,14 @@
 ---
 /**
- * Theme + motion controls.
+ * Theme + motion controls (T4).
  *
- * T2 ships this as a static, non-hydrated control: markup and styling are
- * final, but the click handling arrives in T4 together with the rest of the
- * islands. It is marked `data-island="pending"` so T4 can find it.
+ * Three states each, persisted in localStorage and applied before first paint by
+ * the inline bootstrap in BaseLayout. State order: system -> light -> dark and
+ * system -> full -> reduced.
+ *
+ * Accessibility: a real <button> with an updating aria-label and a text label
+ * that changes, so the current state is announced. The label is visually hidden
+ * below 1024px but stays in the accessible name.
  */
 import { t, type Lang } from '../i18n/ui';
 
@@ -13,33 +17,131 @@ interface Props {
 }
 
 const { lang } = Astro.props;
+
+const labels = {
+  theme: {
+    system: t(lang, 'theme.system'),
+    light: t(lang, 'theme.light'),
+    dark: t(lang, 'theme.dark'),
+  },
+  motion: {
+    system: t(lang, 'motion.system'),
+    full: t(lang, 'motion.full'),
+    reduced: t(lang, 'motion.reduced'),
+  },
+};
 ---
 
-<div class="toggle-group" data-island="pending">
-  <button
-    type="button"
-    class="toggle"
-    id="theme-toggle"
-    aria-label={t(lang, 'theme.label')}
-    aria-live="polite"
-    data-state="system"
-  >
-    <span class="toggle__icon" aria-hidden="true">◐</span>
-    <span class="toggle__text" data-theme-label>{t(lang, 'theme.system')}</span>
+<div
+  class="toggle-group"
+  data-theme-toggle
+  data-labels={JSON.stringify(labels)}
+  data-aria-theme={t(lang, 'theme.label')}
+  data-aria-motion={t(lang, 'motion.label')}
+>
+  <button type="button" class="toggle" data-theme-button data-state="system">
+    <span class="toggle__icon" aria-hidden="true" data-theme-icon>◐</span>
+    <span class="toggle__text" data-theme-text>{labels.theme.system}</span>
   </button>
 
-  <button
-    type="button"
-    class="toggle"
-    id="motion-toggle"
-    aria-label={t(lang, 'motion.label')}
-    aria-live="polite"
-    data-state="system"
-  >
-    <span class="toggle__icon" aria-hidden="true">◎</span>
-    <span class="toggle__text" data-motion-label>{t(lang, 'motion.system')}</span>
+  <button type="button" class="toggle" data-motion-button data-state="system">
+    <span class="toggle__icon" aria-hidden="true" data-motion-icon>◎</span>
+    <span class="toggle__text" data-motion-text>{labels.motion.system}</span>
   </button>
 </div>
+
+<script>
+  const root = document.documentElement;
+  const group = document.querySelector<HTMLElement>('[data-theme-toggle]');
+
+  if (group) {
+    const themeButton = group.querySelector<HTMLButtonElement>('[data-theme-button]');
+    const motionButton = group.querySelector<HTMLButtonElement>('[data-motion-button]');
+    const themeText = group.querySelector<HTMLElement>('[data-theme-text]');
+    const motionText = group.querySelector<HTMLElement>('[data-motion-text]');
+    const themeIcon = group.querySelector<HTMLElement>('[data-theme-icon]');
+    const motionIcon = group.querySelector<HTMLElement>('[data-motion-icon]');
+
+    const labels = JSON.parse(group.dataset.labels ?? '{}');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const read = (key: string, fallback: string) => {
+      try {
+        return localStorage.getItem(key) ?? fallback;
+      } catch {
+        return fallback;
+      }
+    };
+    const write = (key: string, value: string) => {
+      try {
+        // 'system' is stored as absence so a cleared value means "follow OS".
+        if (value === 'system') localStorage.removeItem(key);
+        else localStorage.setItem(key, value);
+      } catch {
+        /* private mode — the current page still updates */
+      }
+    };
+
+    /* ------------------------------- theme -------------------------------- */
+
+    const applyTheme = (state: string) => {
+      const dark = state === 'dark' || (state === 'system' && systemDark.matches);
+      root.classList.toggle('dark', dark);
+      if (themeText) themeText.textContent = labels.theme?.[state] ?? state;
+      if (themeIcon) themeIcon.textContent = state === 'light' ? '☀' : state === 'dark' ? '☾' : '◐';
+      if (themeButton) {
+        themeButton.dataset.state = state;
+        themeButton.setAttribute('aria-label', `${group.dataset.ariaTheme}: ${labels.theme?.[state] ?? state}`);
+      }
+    };
+
+    /* ------------------------------- motion ------------------------------- */
+
+    const applyMotion = (state: string) => {
+      root.classList.toggle('reduce-motion', state === 'reduced');
+      // "full" must actively opt out of the OS setting, so mark it.
+      root.classList.toggle('force-motion', state === 'full');
+      if (motionText) motionText.textContent = labels.motion?.[state] ?? state;
+      if (motionIcon) motionIcon.textContent = state === 'reduced' ? '◌' : state === 'full' ? '◉' : '◎';
+      if (motionButton) {
+        motionButton.dataset.state = state;
+        motionButton.setAttribute(
+          'aria-label',
+          `${group.dataset.ariaMotion}: ${labels.motion?.[state] ?? state}`,
+        );
+      }
+    };
+
+    /* ------------------------------ wiring -------------------------------- */
+
+    let themeState = read('theme', 'system');
+    let motionState = read('motion', 'system');
+
+    // Reflect whatever the inline bootstrap already decided.
+    applyTheme(themeState);
+    applyMotion(motionState);
+
+    const next = (current: string, order: string[]) =>
+      order[(order.indexOf(current) + 1) % order.length] ?? order[0] ?? current;
+
+    themeButton?.addEventListener('click', () => {
+      themeState = next(themeState, ['system', 'light', 'dark']);
+      write('theme', themeState);
+      applyTheme(themeState);
+    });
+
+    motionButton?.addEventListener('click', () => {
+      motionState = next(motionState, ['system', 'full', 'reduced']);
+      write('motion', motionState);
+      applyMotion(motionState);
+    });
+
+    // Follow the OS while the user has not made an explicit choice.
+    systemDark.addEventListener('change', () => {
+      if (themeState === 'system') applyTheme('system');
+    });
+  }
+</script>
 
 <style>
   .toggle-group {
@@ -74,11 +176,22 @@ const { lang } = Astro.props;
     color: var(--primary);
   }
 
+  /* The active non-system state gets a subtle tint so it is visible at a glance. */
+  .toggle[data-state='dark'],
+  .toggle[data-state='light'],
+  .toggle[data-state='reduced'],
+  .toggle[data-state='full'] {
+    border-color: var(--primary);
+    color: var(--primary);
+    background-color: var(--primary-soft);
+  }
+
   .toggle__icon {
     font-size: 0.875rem;
   }
 
-  /* Text label is hidden below 1024px to keep the header from wrapping. */
+  /* Below 1024px the header has no room for the text label; it stays in the
+     accessible name via aria-label. */
   @media (max-width: 64rem) {
     .toggle__text {
       display: none;

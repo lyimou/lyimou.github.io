@@ -303,15 +303,16 @@
   /*
    * Motion policy: honour the OS setting, and allow an explicit in-page
    * override (html.reduce-motion) for visitors who want motion off even when
-   * their OS asks for it on. No scroll-reveal animation libraries are used.
+   * their OS asks for it on. `html.force-motion` does the opposite — it opts
+   * back in when the OS asks for reduced motion.
    */
   @media (prefers-reduced-motion: reduce) {
-    html {
+    html:not(.force-motion) {
       scroll-behavior: auto;
     }
-    *,
-    *::before,
-    *::after {
+    html:not(.force-motion) *,
+    html:not(.force-motion) *::before,
+    html:not(.force-motion) *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;

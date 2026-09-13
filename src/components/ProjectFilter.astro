@@ -62,7 +62,8 @@ const statusLabel: Record<string, string> = {
         <li data-category={project.data.category}>
           <Card href={localizePath(lang, `/projects/${slugOf(project.id)}`)}>
             <div class="pc__head">
-              <h3 class="pc__title">{project.data.title}</h3>
+              {/* h2: these sit directly under the page h1, so h3 would skip a level. */}
+              <h2 class="pc__title">{project.data.title}</h2>
               <span class="pc__status">{statusLabel[project.data.status] ?? project.data.status}</span>
             </div>
             <p class="pc__summary">{project.data.summary}</p>

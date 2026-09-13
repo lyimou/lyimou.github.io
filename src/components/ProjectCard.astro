@@ -8,9 +8,11 @@ import { localizePath, type Lang } from '../i18n/ui';
 interface Props {
   project: ProjectEntry;
   lang: Lang;
+  /** Heading level, so cards sit correctly under whatever precedes them. */
+  headingLevel?: 'h2' | 'h3';
 }
 
-const { project, lang } = Astro.props;
+const { project, lang, headingLevel: Heading = 'h3' } = Astro.props;
 const { data } = project;
 const href = localizePath(lang, `/projects/${slugOf(project.id)}`);
 
@@ -23,7 +25,7 @@ const statusLabel: Record<string, string> = {
 
 <Card href={href}>
   <div class="project-card__head">
-    <h3 class="project-card__title">{data.title}</h3>
+    <Heading class="project-card__title">{data.title}</Heading>
     <span class="project-card__status">{statusLabel[data.status] ?? data.status}</span>
   </div>
 
