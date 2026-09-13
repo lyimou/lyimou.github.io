@@ -1,0 +1,66 @@
+---
+title: 'AimSense — mouse sensitivity testing'
+summary: 'A browser tool that measures your FPS sensitivity instead of guessing: three aim tests at three sensitivities, curve-fitted into a recommendation.'
+category: 'personal'
+tech: ['JavaScript', 'Canvas', 'Web APIs', 'No dependencies']
+role: 'Sole author — design, test engine, scoring model, charts and tooling'
+status: 'complete'
+demo: 'https://lyimou.github.io/aimsense/'
+repo: 'https://github.com/lyimou/aimsense'
+featured: true
+order: 1
+lang: 'en'
+translationKey: 'aimsense'
+pubDate: 2026-09-14
+---
+
+## What it is
+
+A tool for FPS players who suspect their mouse sensitivity is wrong but have no way to check. It runs three aim tests — flick, tracking and micro-adjustment — at three different sensitivities, scores them against each other, and fits a curve to recommend a setting. Everything runs in the browser; nothing is uploaded.
+
+## The interesting problem: no ground truth
+
+The obvious approach — print a recommended number like `800 DPI @ 1.9` — is dishonest, because there is no public benchmark for "good" sensitivity. Any such number is just someone else's preference wearing a lab coat.
+
+So AimSense compares you against **yourself**. It tests 0.5×, 1.0× and 2.0× of your current setting, then fits a quadratic to the three scores by least squares. The peak of that curve is the recommendation, expressed as a multiplier. When the three scores land within a few points of each other the tool says so and recommends no change, because a confident number derived from flat data is worse than an honest "you're fine".
+
+## How a run is scored
+
+Each mode produces metrics on different scales, so each is normalised to 0–1 against fixed reference points and combined:
+
+- **Flick** — 70% hit rate, 18% reaction speed, 12% precision
+- **Track** — 60% time-on-target, 40% steadiness (inverse mean deviation)
+- **Micro-adjust** — 70% accuracy, 30% precision
+
+Overshoot enters as a penalty rather than a bonus: both stopping short and flying past mean the sensitivity does not match your motor range. The goal is *arrives on target*.
+
+## Engineering notes
+
+**No dependencies, not even a charting library.** The five report charts are about 300 lines of canvas. That keeps the tool working offline, removes any third-party request on load, and means there is no build step at all — the repository root *is* the deployed site.
+
+**The maths is separate from the DOM.** `sensitivity.js` and `recommend.js` import nothing from the browser, so they run under plain Node and are unit-tested without a headless browser.
+
+**The engine is a canvas driver only.** Round sequencing lives in `session.js`, so the test plan is a data structure that can change without touching the engine.
+
+**Robustness was a requirement, not an afterthought.** Losing pointer lock, switching windows or hiding the tab all pause the round with an explanatory overlay rather than silently scoring you on input you never made. Every round also has a hard time limit, so a round can never hang.
+
+## Two bugs worth writing down
+
+Both were **silent** — the code produced confident, plausible output and nothing threw. Only the tests caught them.
+
+**An inverted scoring term.** One metric was normalised as `1 - lerpScore(...)`, but `lerpScore` already maps the good end to 1 — so a *smaller* overshoot scored *worse*. The inverted term simply contributed ~0, which looked exactly like a mis-calibrated tolerance. I chased the wrong theory (adjusting reference values, which changed nothing) before decomposing the score term by term and finding the sign error.
+
+**A malformed normal-equations matrix.** In the least-squares fit, Σx and the sample count were transposed, so the matrix was not symmetric. The fit returned a peak of 1.25 where the exact answer was 1.0. It looked plausible, and the only reason it surfaced is that I compared the fit against a hand-computed parabola.
+
+The lesson I took: when a numeric result is *wrong but reasonable*, test the direction and the exactness of each term individually instead of checking the total for plausibility.
+
+## Verification
+
+- **22 unit tests** on the sensitivity maths — cm/360 against known reference values, cross-game conversion round-trips, and the curve fit against exactly-generated parabolas
+- **48 unit tests** on the scoring and recommendation — direction of every metric, full dynamic range, monotonicity, and every branch of the decision tree
+- **22 browser checks** — no console errors, form validation, 44px touch targets and no overflow at 1440 / 768 / 375
+- **19 end-to-end checks** driving a real round: metrics collected, scored, curve-fitted and charted
+
+## What I would do differently
+
+Write the direction assertions before the scoring code, not after. The inverted term took far longer to find than it would have taken to prevent, and a one-line test per metric would have caught it immediately.
