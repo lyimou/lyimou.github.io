@@ -1,11 +1,28 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProjectFilter from '../../../components/ProjectFilter.astro';
+import { getProjects } from '../../../lib/content';
 import { t } from '../../../i18n/ui';
 
 const lang = 'zh' as const;
+const projects = await getProjects(lang);
 ---
 
-<BaseLayout lang={lang} title={t(lang, 'projects.title')}>
+<BaseLayout
+  lang={lang}
+  title={t(lang, 'projects.title')}
+  description={`黃浩華的項目選集 —— 共 ${projects.length} 篇，涵蓋系統、C++ 與機器學習。`}
+>
   <h1>{t(lang, 'projects.title')}</h1>
-  <p>T1 骨架 —— 項目網格與分類過濾將在 T2/T3 加入。</p>
+  <p class="lede">{t(lang, 'site.description')}</p>
+
+  <ProjectFilter projects={projects} lang={lang} />
 </BaseLayout>
+
+<style>
+  .lede {
+    color: var(--text-muted);
+    max-width: var(--measure-prose);
+    margin-bottom: 2rem;
+  }
+</style>

@@ -1,0 +1,99 @@
+---
+import Tag from './Tag.astro';
+import type { BlogEntry } from '../lib/content';
+import { slugOf, formatDate, readingTime } from '../lib/content';
+import { localizePath, t, type Lang } from '../i18n/ui';
+
+interface Props {
+  post: BlogEntry;
+  lang: Lang;
+}
+
+const { post, lang } = Astro.props;
+const { data } = post;
+const href = localizePath(lang, `/blog/${slugOf(post.id)}`);
+---
+
+<li class="post-item">
+  <div class="post-item__meta">
+    <time datetime={data.pubDate.toISOString()}>{formatDate(data.pubDate, lang)}</time>
+    <span aria-hidden="true">·</span>
+    <span>{readingTime(post.body, lang)}</span>
+  </div>
+
+  <h2 class="post-item__title">
+    <a href={href}>{data.title}</a>
+    {data.draft ? <span class="post-item__draft">{t(lang, 'blog.draft')}</span> : null}
+  </h2>
+
+  <p class="post-item__summary">{data.description}</p>
+
+  {
+    data.tags.length > 0 ? (
+      <div class="post-item__tags">
+        {data.tags.map((tag) => (
+          <Tag href={localizePath(lang, `/tags/${tag.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-')}`)}>
+            {tag}
+          </Tag>
+        ))}
+      </div>
+    ) : null
+  }
+</li>
+
+<style>
+  .post-item {
+    padding-block: 1.75rem;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .post-item:last-child {
+    border-bottom: 0;
+  }
+
+  .post-item__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .post-item__title {
+    margin: 0.375rem 0 0.5rem;
+    font-size: 1.3125rem;
+  }
+
+  .post-item__title a {
+    color: var(--text);
+  }
+  .post-item__title a:hover {
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .post-item__draft {
+    display: inline-block;
+    margin-left: 0.5rem;
+    padding: 0.05rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    vertical-align: middle;
+  }
+
+  .post-item__summary {
+    margin: 0 0 0.875rem;
+    color: var(--text-muted);
+    max-width: var(--measure-prose);
+  }
+
+  .post-item__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+</style>

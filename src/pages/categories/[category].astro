@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostListItem from '../../components/PostListItem.astro';
+import { getPosts, slugifyTag } from '../../lib/content';
+import { t } from '../../i18n/ui';
+
+const lang = 'en' as const;
+
+export async function getStaticPaths() {
+  const posts = await getPosts('en');
+  const categories = [...new Set(posts.map((p) => p.data.category))];
+  return categories.map((category) => ({
+    params: { category: slugifyTag(category) },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const posts = (await getPosts('en')).filter((p) => p.data.category === category);
+---
+
+<BaseLayout lang={lang} title={`${t(lang, 'blog.categories')}: ${category}`}>
+  <p class="crumb"><a href="/tags/">{t(lang, 'blog.categories')}</a></p>
+  <h1>{category}</h1>
+  <p class="count">{posts.length} post{posts.length === 1 ? '' : 's'}</p>
+
+  {
+    posts.length > 0 ? (
+      <ul class="posts">
+        {posts.map((post) => (
+          <PostListItem post={post} lang={lang} />
+        ))}
+      </ul>
+    ) : (
+      <p class="muted">{t(lang, 'blog.empty')}</p>
+    )
+  }
+</BaseLayout>
+
+<style>
+  .crumb {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+  }
+  .count {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+  }
+  .posts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .muted {
+    color: var(--text-muted);
+  }
+</style>

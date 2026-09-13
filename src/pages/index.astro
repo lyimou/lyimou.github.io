@@ -1,47 +1,115 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import PostListItem from '../components/PostListItem.astro';
+import { getFeaturedProjects, getPosts } from '../lib/content';
 import { t, localizePath } from '../i18n/ui';
-import { getCollection } from 'astro:content';
 
 const lang = 'en' as const;
 
-const featured = (await getCollection('projects'))
-  .filter((entry) => entry.data.lang === lang && entry.data.featured)
-  .sort((a, b) => a.data.order - b.data.order);
+const featured = await getFeaturedProjects(lang, 3);
+const allProjects = await getFeaturedProjects(lang);
+const latestPosts = (await getPosts(lang)).slice(0, 3);
 
-/** Glob loader ids are like "en/arduino-mnist-inference". */
-const slugOf = (id: string) => id.split('/').pop() ?? id;
+const typedPhrases = [
+  'Computer Science student at HKUST.',
+  'I build things that run close to the hardware.',
+  'Currently learning in public.',
+];
 ---
 
 <BaseLayout lang={lang}>
-  <section>
-    <h1>{t(lang, 'site.title')}</h1>
-    <p>{t(lang, 'site.tagline')}</p>
+  <Hero lang={lang} headline={t(lang, 'site.title')} phrases={typedPhrases} />
+
+  <section class="block">
+    <SectionHeading action={{ href: localizePath(lang, '/projects'), label: t(lang, 'projects.title') }}>
+      {t(lang, 'section.featured')}
+    </SectionHeading>
+
+    {
+      featured.length > 0 ? (
+        <ul class="grid">
+          {featured.map((project) => (
+            <li>
+              <ProjectCard project={project} lang={lang} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">Project write-ups are being added.</p>
+      )
+    }
+
+    {
+      allProjects.length > featured.length ? (
+        <p class="more">
+          <a href={localizePath(lang, '/projects')}>See all projects ({allProjects.length}) →</a>
+        </p>
+      ) : null
+    }
   </section>
 
-  <section>
-    <h2>{t(lang, 'section.featured')}</h2>
-    {featured.length === 0 ? <p>No featured projects yet.</p> : null}
-    <ul>
-      {
-        featured.map((project) => (
-          <li>
-            <a href={localizePath(lang, `/projects/${slugOf(project.id)}`)}>
-              {project.data.title}
-            </a>
-            <p>{project.data.summary}</p>
-          </li>
-        ))
-      }
-    </ul>
+  <section class="block">
+    <SectionHeading action={{ href: localizePath(lang, '/blog'), label: t(lang, 'blog.title') }}>
+      Latest posts
+    </SectionHeading>
+
+    {
+      latestPosts.length > 0 ? (
+        <ul class="posts">
+          {latestPosts.map((post) => (
+            <PostListItem post={post} lang={lang} />
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">The first posts are on the way.</p>
+      )
+    }
   </section>
 
-  <section>
-    <h2>{t(lang, 'section.contact')}</h2>
+  <section class="block">
+    <SectionHeading>{t(lang, 'section.contact')}</SectionHeading>
     <p>
       <a href="mailto:fwhuang@connect.ust.hk">fwhuang@connect.ust.hk</a>
       {' · '}
-      <a href="https://github.com/lyimou">GitHub</a>
+      <a href="https://github.com/lyimou" rel="noopener noreferrer" target="_blank">GitHub</a>
     </p>
   </section>
 </BaseLayout>
+
+<style>
+  .block {
+    margin-block: 3.5rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .posts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .muted {
+    color: var(--text-muted);
+  }
+
+  .more {
+    margin-top: 1.5rem;
+  }
+
+  @media (max-width: 48rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

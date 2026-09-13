@@ -1,0 +1,73 @@
+---
+import Card from './Card.astro';
+import Tag from './Tag.astro';
+import type { ProjectEntry } from '../lib/content';
+import { slugOf } from '../lib/content';
+import { localizePath, type Lang } from '../i18n/ui';
+
+interface Props {
+  project: ProjectEntry;
+  lang: Lang;
+}
+
+const { project, lang } = Astro.props;
+const { data } = project;
+const href = localizePath(lang, `/projects/${slugOf(project.id)}`);
+
+const statusLabel: Record<string, string> = {
+  complete: lang === 'zh' ? '已完成' : 'Complete',
+  prototype: lang === 'zh' ? '原型' : 'Prototype',
+  ongoing: lang === 'zh' ? '進行中' : 'Ongoing',
+};
+---
+
+<Card href={href}>
+  <div class="project-card__head">
+    <h3 class="project-card__title">{data.title}</h3>
+    <span class="project-card__status">{statusLabel[data.status] ?? data.status}</span>
+  </div>
+
+  <p class="project-card__summary">{data.summary}</p>
+
+  {
+    data.tech.length > 0 ? (
+      <div class="project-card__tech">
+        {data.tech.map((t) => (
+          <Tag>{t}</Tag>
+        ))}
+      </div>
+    ) : null
+  }
+</Card>
+
+<style>
+  .project-card__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .project-card__title {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  .project-card__status {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .project-card__summary {
+    margin: 0.5rem 0 0.875rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  .project-card__tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+</style>

@@ -1,0 +1,20 @@
+---
+import { getCollection } from 'astro:content';
+import PostArticle from '../../../components/post/PostArticle.astro';
+import { slugOf } from '../../../lib/content';
+import type { Lang } from '../../../i18n/ui';
+
+const lang: Lang = 'zh';
+
+export async function getStaticPaths() {
+  const all = await getCollection('blog');
+  return all
+    .filter((e) => e.data.lang === 'zh')
+    .filter((e) => !import.meta.env.PROD || !e.data.draft)
+    .map((entry) => ({ params: { slug: slugOf(entry.id) }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+---
+
+<PostArticle entry={entry} lang={lang} />

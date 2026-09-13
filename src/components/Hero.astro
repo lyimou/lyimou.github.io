@@ -1,0 +1,171 @@
+---
+/**
+ * Home hero.
+ *
+ * The typing effect is the single decorative interaction on the site and the
+ * only one that hydrates on the home page. The full text is present in the HTML
+ * and is only replaced once the script runs, so it degrades cleanly with JS off,
+ * for search engines, and under prefers-reduced-motion.
+ */
+import { t, localizePath, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  /** Static heading; the typed line appears beneath it. */
+  headline: string;
+  phrases: string[];
+}
+
+const { lang, headline, phrases } = Astro.props;
+---
+
+<section class="hero">
+  <h1 class="hero__title">{headline}</h1>
+
+  <p class="hero__typed" data-typed data-phrases={JSON.stringify(phrases)}>
+    <span data-typed-output>{phrases[0]}</span><span class="hero__caret" data-typed-caret aria-hidden="true"></span>
+  </p>
+
+  <div class="hero__actions">
+    <a class="hero__btn hero__btn--primary" href={localizePath(lang, '/projects')}>
+      {t(lang, 'nav.projects')}
+    </a>
+    <a class="hero__btn" href={localizePath(lang, '/about')}>{t(lang, 'nav.about')}</a>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-typed]');
+  if (root) {
+    const output = root.querySelector<HTMLElement>('[data-typed-output]');
+    const caret = root.querySelector<HTMLElement>('[data-typed-caret]');
+    const phrases: string[] = JSON.parse(root.dataset.phrases ?? '[]');
+
+    const reduceMotion =
+      document.documentElement.classList.contains('reduce-motion') ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (output && phrases.length > 0 && !reduceMotion) {
+      const first = phrases[0] ?? '';
+      let phraseIndex = 0;
+      let charIndex = first.length;
+      let deleting = true;
+
+      if (caret) caret.classList.add('is-typing');
+
+      const tick = () => {
+        const phrase = phrases[phraseIndex] ?? '';
+        if (deleting) {
+          charIndex--;
+          if (charIndex <= 0) {
+            deleting = false;
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+            charIndex = 0;
+          }
+        } else {
+          charIndex++;
+          if (charIndex >= phrase.length) {
+            // Pause on the completed phrase before deleting it.
+            output.textContent = phrase;
+            window.setTimeout(() => {
+              deleting = true;
+              window.setTimeout(tick, 40);
+            }, 2200);
+            return;
+          }
+        }
+        output.textContent = phrase.slice(0, charIndex);
+        window.setTimeout(tick, deleting ? 32 : 68);
+      };
+
+      // Let the first phrase sit on screen before starting to delete.
+      window.setTimeout(tick, 2400);
+    }
+  }
+</script>
+
+<style>
+  .hero {
+    padding-block: 2rem 1rem;
+  }
+
+  .hero__title {
+    margin: 0;
+    font-size: 2.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .hero__typed {
+    margin: 0.5rem 0 0;
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    min-height: 1.9em; /* reserve space so nothing shifts while typing */
+  }
+
+  .hero__caret {
+    display: inline-block;
+    width: 0.5ch;
+    height: 1.05em;
+    margin-left: 0.1em;
+    background-color: var(--primary);
+    vertical-align: -0.15em;
+  }
+
+  /* Only blink while the script is actually driving the effect. */
+  .hero__caret.is-typing {
+    animation: caret-blink 1.1s steps(2, start) infinite;
+  }
+
+  @keyframes caret-blink {
+    to {
+      visibility: hidden;
+    }
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+
+  .hero__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button);
+    color: var(--text);
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .hero__btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .hero__btn--primary {
+    background-color: var(--primary-fill);
+    border-color: var(--primary-fill);
+    color: #fff;
+  }
+
+  .hero__btn--primary:hover {
+    background-color: var(--primary-fill-hover);
+    border-color: var(--primary-fill-hover);
+    color: #fff;
+  }
+
+  @media (max-width: 48rem) {
+    .hero__title {
+      font-size: 2rem;
+    }
+    .hero__typed {
+      font-size: 1.0625rem;
+    }
+  }
+</style>

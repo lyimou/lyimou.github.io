@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro check && astro build && pagefind --site dist",
     "build:only": "astro build",
     "check": "astro check",
     "check:contrast": "node scripts/contrast-check.mjs",

@@ -1,0 +1,334 @@
+---
+/**
+ * Shared blog-post presentation.
+ *
+ * Both `/blog/[slug]` and `/zh/blog/[slug]` render this, so the TOC, progress
+ * bar, related-posts and comment wiring exist in exactly one place.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Prose from '../Prose.astro';
+import Tag from '../Tag.astro';
+import TableOfContents from '../TableOfContents.astro';
+import { slugOf, formatDate, readingTime, getRelatedPosts } from '../../lib/content';
+import { buildToc } from '../../lib/toc';
+import { t, localizePath, type Lang } from '../../i18n/ui';
+
+interface Props {
+  entry: CollectionEntry<'blog'>;
+  lang: Lang;
+}
+
+const { entry, lang } = Astro.props;
+const { data } = entry;
+const { Content, headings } = await render(entry);
+
+const slug = slugOf(entry.id);
+const toc = buildToc(headings);
+const related = await getRelatedPosts(lang, slug, data.tags, 3);
+
+const tagHref = (tag: string) =>
+  localizePath(lang, `/tags/${tag.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-')}`);
+
+/**
+ * Giscus — populated in T6 after GitHub Discussions is enabled on the repo.
+ * Until repoId/categoryId exist the component renders an explanatory note
+ * rather than a broken iframe.
+ */
+const giscus = {
+  repo: 'lyimou/lyimou.github.io',
+  repoId: '',
+  category: 'Announcements',
+  categoryId: '',
+};
+const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
+---
+
+<BaseLayout lang={lang} title={data.title} description={data.description}>
+  <div class="progress" aria-hidden="true"><span data-reading-progress></span></div>
+
+  <div class="post-layout">
+    <article class="post">
+      <header class="post__head">
+        <p class="post__crumb">
+          <a href={localizePath(lang, '/blog')}>{t(lang, 'blog.title')}</a>
+        </p>
+        <h1>{data.title}</h1>
+
+        <p class="post__meta">
+          <time datetime={data.pubDate.toISOString()}>
+            {t(lang, 'blog.published')} {formatDate(data.pubDate, lang)}
+          </time>
+          {
+            data.updatedDate ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <time datetime={data.updatedDate.toISOString()}>
+                  {t(lang, 'blog.updated')} {formatDate(data.updatedDate, lang)}
+                </time>
+              </>
+            ) : null
+          }
+          <span aria-hidden="true">·</span>
+          <span>{readingTime(entry.body, lang)}</span>
+          {data.draft ? <span class="post__draft">{t(lang, 'blog.draft')}</span> : null}
+        </p>
+
+        {
+          data.tags.length > 0 ? (
+            <div class="post__tags">
+              {data.tags.map((tag) => (
+                <Tag href={tagHref(tag)}>{tag}</Tag>
+              ))}
+            </div>
+          ) : null
+        }
+      </header>
+
+      <Prose>
+        <Content />
+      </Prose>
+
+      {
+        related.length > 0 ? (
+          <section class="related">
+            <h2>{t(lang, 'blog.related')}</h2>
+            <ul>
+              {related.map((post: CollectionEntry<'blog'>) => (
+                <li>
+                  <a href={localizePath(lang, `/blog/${slugOf(post.id)}`)}>{post.data.title}</a>
+                  <span class="related__date">{formatDate(post.data.pubDate, lang)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null
+      }
+
+      <section class="comments">
+        <h2>{lang === 'zh' ? '評論' : 'Comments'}</h2>
+        {
+          giscusReady ? (
+            <script
+              is:inline
+              src="https://giscus.app/client.js"
+              data-repo={giscus.repo}
+              data-repo-id={giscus.repoId}
+              data-category={giscus.category}
+              data-category-id={giscus.categoryId}
+              data-mapping="pathname"
+              data-strict="1"
+              data-reactions-enabled="1"
+              data-input-position="top"
+              data-theme="preferred_color_scheme"
+              data-lang={lang === 'zh' ? 'zh-Hant' : 'en'}
+              data-loading="lazy"
+              crossorigin="anonymous"
+              async
+            />
+          ) : (
+            <p class="comments__pending">
+              {lang === 'zh'
+                ? '評論功能將在啟用 GitHub Discussions 後開啟。'
+                : 'Comments will be enabled once GitHub Discussions is switched on.'}
+            </p>
+          )
+        }
+      </section>
+    </article>
+
+    <aside class="post__rail">
+      <TableOfContents items={toc} lang={lang} />
+    </aside>
+  </div>
+</BaseLayout>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-reading-progress]');
+  const article = document.querySelector<HTMLElement>('.post');
+  if (bar && article) {
+    let ticking = false;
+    const update = () => {
+      const rect = article.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
+      bar.style.width = `${total > 0 ? (scrolled / total) * 100 : 0}%`;
+      ticking = false;
+    };
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(update);
+        }
+      },
+      { passive: true },
+    );
+    update();
+  }
+
+  const isZh = document.documentElement.lang.startsWith('zh');
+  for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre')) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'code-copy';
+    button.textContent = isZh ? '複製' : 'Copy';
+    button.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.textContent ?? '';
+      try {
+        await navigator.clipboard.writeText(code);
+        button.textContent = isZh ? '已複製' : 'Copied';
+      } catch {
+        button.textContent = isZh ? '失敗' : 'Failed';
+      }
+      window.setTimeout(() => {
+        button.textContent = isZh ? '複製' : 'Copy';
+      }, 1600);
+    });
+    pre.appendChild(button);
+  }
+</script>
+
+<style>
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    z-index: 50;
+  }
+
+  .progress span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background-color: var(--primary);
+  }
+
+  .post-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--width-toc);
+    gap: 3.5rem;
+    align-items: start;
+  }
+
+  .post__head {
+    margin-bottom: 2rem;
+  }
+
+  .post__crumb {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .post__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.75rem 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+
+  .post__draft {
+    padding: 0.05rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    font-size: 0.6875rem;
+  }
+
+  .post__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .related {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--divider);
+  }
+
+  .related h2 {
+    font-size: 1.125rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .related ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .related li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.5rem;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .related li:last-child {
+    border-bottom: 0;
+  }
+
+  .related__date {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .comments {
+    margin-top: 3.5rem;
+  }
+
+  .comments h2 {
+    font-size: 1.125rem;
+  }
+
+  .comments__pending {
+    padding: 1rem 1.25rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-card);
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  /* Code copy button, positioned inside the block added by the script. */
+  :global(.prose pre) {
+    position: relative;
+  }
+
+  :global(.code-copy) {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    background-color: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 0.375rem;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+
+  :global(.prose pre:hover .code-copy),
+  :global(.code-copy:focus-visible) {
+    opacity: 1;
+  }
+
+  @media (max-width: 64rem) {
+    .post-layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.5rem;
+    }
+  }
+</style>

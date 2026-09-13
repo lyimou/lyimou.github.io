@@ -1,0 +1,215 @@
+---
+/**
+ * Project grid with category filtering.
+ *
+ * Progressive enhancement: every card is rendered server-side and all cards are
+ * visible by default, so the page is fully usable with JS disabled. The inline
+ * script only toggles visibility and updates the chip state.
+ */
+import Card from './Card.astro';
+import Tag from './Tag.astro';
+import type { ProjectEntry } from '../lib/content';
+import { slugOf } from '../lib/content';
+import { localizePath, t, type Lang } from '../i18n/ui';
+
+interface Props {
+  projects: ProjectEntry[];
+  lang: Lang;
+}
+
+const { projects, lang } = Astro.props;
+
+const categories = ['course', 'personal', 'tool'] as const;
+const categoryLabel: Record<string, string> = {
+  course: t(lang, 'projects.filter.course'),
+  personal: t(lang, 'projects.filter.personal'),
+  tool: t(lang, 'projects.filter.tool'),
+};
+
+// Only show filter chips for categories that actually have projects.
+const presentCategories = categories.filter((c) => projects.some((p) => p.data.category === c));
+
+const statusLabel: Record<string, string> = {
+  complete: lang === 'zh' ? '已完成' : 'Complete',
+  prototype: lang === 'zh' ? '原型' : 'Prototype',
+  ongoing: lang === 'zh' ? '進行中' : 'Ongoing',
+};
+---
+
+<div class="project-filter" data-project-filter>
+  <div class="project-filter__chips" role="group" aria-label={t(lang, 'projects.title')}>
+    <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">
+      {t(lang, 'projects.all')}
+      <span class="chip__count">{projects.length}</span>
+    </button>
+    {
+      presentCategories.map((c) => (
+        <button type="button" class="chip" data-filter={c} aria-pressed="false">
+          {categoryLabel[c]}
+          <span class="chip__count">{projects.filter((p) => p.data.category === c).length}</span>
+        </button>
+      ))
+    }
+  </div>
+
+  <p class="project-filter__empty" data-filter-empty hidden>
+    {t(lang, 'projects.empty')}
+  </p>
+
+  <ul class="project-grid" data-project-grid>
+    {
+      projects.map((project) => (
+        <li data-category={project.data.category}>
+          <Card href={localizePath(lang, `/projects/${slugOf(project.id)}`)}>
+            <div class="pc__head">
+              <h3 class="pc__title">{project.data.title}</h3>
+              <span class="pc__status">{statusLabel[project.data.status] ?? project.data.status}</span>
+            </div>
+            <p class="pc__summary">{project.data.summary}</p>
+            {project.data.tech.length > 0 ? (
+              <div class="pc__tech">
+                {project.data.tech.map((tech) => (
+                  <Tag>{tech}</Tag>
+                ))}
+              </div>
+            ) : null}
+          </Card>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-project-filter]');
+  if (root) {
+    const chips = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const items = [...root.querySelectorAll<HTMLElement>('[data-project-grid] > li')];
+    const empty = root.querySelector<HTMLElement>('[data-filter-empty]');
+
+    const apply = (filter: string) => {
+      let shown = 0;
+      for (const item of items) {
+        const match = filter === 'all' || item.dataset.category === filter;
+        item.hidden = !match;
+        if (match) shown++;
+      }
+      for (const chip of chips) {
+        const active = chip.dataset.filter === filter;
+        chip.classList.toggle('is-active', active);
+        chip.setAttribute('aria-pressed', String(active));
+      }
+      if (empty) empty.hidden = shown > 0;
+    };
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => apply(chip.dataset.filter ?? 'all'));
+    }
+  }
+</script>
+
+<style>
+  .project-filter__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    padding: 0.25rem 0.875rem;
+    background-color: transparent;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease-out,
+      color 180ms ease-out,
+      background-color 180ms ease-out;
+  }
+
+  .chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .chip.is-active {
+    background-color: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .chip__count {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .project-grid {
+    display: grid;
+    /* auto-fit so a small number of projects fills the row instead of leaving
+       empty columns (a fixed 3-column grid strands a single card). */
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project-grid > li[hidden] {
+    display: none;
+  }
+
+  .project-filter__empty {
+    color: var(--text-muted);
+  }
+
+  .pc__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .pc__title {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  .pc__status {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .pc__summary {
+    margin: 0.5rem 0 0.875rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  .pc__tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  @media (max-width: 64rem) {
+    .project-grid {
+      grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .project-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

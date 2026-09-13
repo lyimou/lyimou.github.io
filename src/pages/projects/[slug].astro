@@ -1,0 +1,148 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Prose from '../../components/Prose.astro';
+import Tag from '../../components/Tag.astro';
+import { slugOf } from '../../lib/content';
+import { t, localizePath } from '../../i18n/ui';
+
+const lang = 'en' as const;
+
+export async function getStaticPaths() {
+  const all = await getCollection('projects');
+  return all
+    .filter((entry) => entry.data.lang === 'en')
+    .map((entry) => ({ params: { slug: slugOf(entry.id) }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { data } = entry;
+const { Content } = await render(entry);
+
+const statusLabel: Record<string, string> = {
+  complete: 'Complete',
+  prototype: 'Prototype',
+  ongoing: 'Ongoing',
+};
+---
+
+<BaseLayout lang={lang} title={data.title} description={data.summary}>
+  <article>
+    <header class="head">
+      <p class="crumb">
+        <a href={localizePath(lang, '/projects')}>{t(lang, 'projects.title')}</a>
+      </p>
+      <h1>{data.title}</h1>
+      <p class="summary">{data.summary}</p>
+
+      <dl class="facts">
+        <div>
+          <dt>Role</dt>
+          <dd>{data.role}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>{statusLabel[data.status] ?? data.status}</dd>
+        </div>
+      </dl>
+
+      {
+        data.tech.length > 0 ? (
+          <div class="tech">
+            {data.tech.map((tech) => (
+              <Tag>{tech}</Tag>
+            ))}
+          </div>
+        ) : null
+      }
+
+      <div class="links">
+        {
+          data.repo ? (
+            <a class="link-btn" href={data.repo} rel="noopener noreferrer" target="_blank">
+              {t(lang, 'projects.repo')} ↗
+            </a>
+          ) : null
+        }
+        {
+          data.demo ? (
+            <a class="link-btn" href={data.demo} rel="noopener noreferrer" target="_blank">
+              {t(lang, 'projects.demo')} ↗
+            </a>
+          ) : null
+        }
+      </div>
+    </header>
+
+    <Prose>
+      <Content />
+    </Prose>
+  </article>
+</BaseLayout>
+
+<style>
+  .head {
+    margin-bottom: 2rem;
+  }
+
+  .crumb {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .summary {
+    color: var(--text-muted);
+    max-width: var(--measure-prose);
+    font-size: 1.0625rem;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin: 1.5rem 0;
+  }
+
+  .facts dt {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .facts dd {
+    margin: 0.125rem 0 0;
+    font-size: 0.9375rem;
+  }
+
+  .tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 1.125rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button);
+    color: var(--text);
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .link-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    text-decoration: none;
+  }
+</style>

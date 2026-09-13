@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Tag from '../../components/Tag.astro';
+import { getTags, getCategories } from '../../lib/content';
+import { t, localizePath } from '../../i18n/ui';
+
+const lang = 'en' as const;
+const tags = await getTags(lang);
+const categories = await getCategories(lang);
+
+const slug = (v: string) => v.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]+/g, '-');
+---
+
+<BaseLayout lang={lang} title={t(lang, 'blog.tags')}>
+  <h1>{t(lang, 'blog.tags')}</h1>
+
+  <section class="group">
+    <h2>{t(lang, 'blog.categories')}</h2>
+    {
+      categories.length > 0 ? (
+        <div class="row">
+          {categories.map(({ category, count }) => (
+            <Tag href={localizePath(lang, `/categories/${slug(category)}`)} tone="primary">
+              {category} ({count})
+            </Tag>
+          ))}
+        </div>
+      ) : (
+        <p class="muted">{t(lang, 'blog.empty')}</p>
+      )
+    }
+  </section>
+
+  <section class="group">
+    <h2>{t(lang, 'blog.tags')}</h2>
+    {
+      tags.length > 0 ? (
+        <div class="row">
+          {tags.map(({ tag, count }) => (
+            <Tag href={localizePath(lang, `/tags/${slug(tag)}`)}>
+              {tag} ({count})
+            </Tag>
+          ))}
+        </div>
+      ) : (
+        <p class="muted">{t(lang, 'blog.empty')}</p>
+      )
+    }
+  </section>
+</BaseLayout>
+
+<style>
+  .group {
+    margin-block: 2.5rem;
+  }
+  .group h2 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--divider);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .muted {
+    color: var(--text-muted);
+  }
+</style>

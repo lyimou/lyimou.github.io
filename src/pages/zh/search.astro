@@ -1,38 +1,18 @@
 ---
-/**
- * Search page — Pagefind static index.
- *
- * Pagefind indexes the built HTML and emits its own UI bundle under
- * /pagefind/, so nothing is shipped until this page is opened. `npm run build`
- * runs the indexer between `astro build` and `astro preview`.
- */
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { t, getLangFromUrl, type Lang } from '../i18n/ui';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { t, type Lang } from '../../i18n/ui';
 
-const url = new URL(Astro.url.pathname, Astro.site ?? 'https://lyimou.github.io');
-const lang: Lang = getLangFromUrl(url);
+const lang: Lang = 'zh';
 ---
 
 <BaseLayout lang={lang} title={t(lang, 'search.title')}>
   <h1>{t(lang, 'search.title')}</h1>
-  <p class="hint">
-    {
-      lang === 'zh'
-        ? '搜尋由 Pagefind 在構建時建立索引，無需外部服務。'
-        : 'Search is indexed at build time by Pagefind — no third-party service involved.'
-    }
-  </p>
+  <p class="hint">搜尋由 Pagefind 在構建時建立索引，無需外部服務。</p>
 
-  <div id="search" class="search-root" data-pagefind-ui></div>
+  <div id="search" class="search-root"></div>
 
   <noscript>
-    <p class="hint">
-      {
-        lang === 'zh'
-          ? '搜尋需要 JavaScript。你仍可瀏覽文章列表。'
-          : 'Search requires JavaScript. You can still browse the post list.'
-      }
-    </p>
+    <p class="hint">搜尋需要 JavaScript。你仍可瀏覽文章列表。</p>
   </noscript>
 
   <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
@@ -44,9 +24,7 @@ const lang: Lang = getLangFromUrl(url);
           element: '#search',
           showSubResults: true,
           showImages: false,
-          translations: {
-            placeholder: document.documentElement.lang.startsWith('zh') ? '搜尋文章…' : 'Search posts…',
-          },
+          translations: { placeholder: '搜尋文章…' },
         });
       }
     });
@@ -59,13 +37,10 @@ const lang: Lang = getLangFromUrl(url);
     max-width: var(--measure-prose);
     font-size: 0.9375rem;
   }
-
   .search-root {
     margin-top: 2rem;
     max-width: 44rem;
   }
-
-  /* Align Pagefind's default theme with the site tokens. */
   :global(.search-root .pagefind-ui__search-input) {
     font-family: var(--font-sans);
     background-color: var(--surface);
@@ -74,15 +49,12 @@ const lang: Lang = getLangFromUrl(url);
     color: var(--text);
     min-height: 2.75rem;
   }
-
   :global(.search-root .pagefind-ui__result) {
     border-top: 1px solid var(--divider);
   }
-
   :global(.search-root .pagefind-ui__result-link) {
     color: var(--primary);
   }
-
   :global(.search-root .pagefind-ui__result-excerpt) {
     color: var(--text-muted);
   }

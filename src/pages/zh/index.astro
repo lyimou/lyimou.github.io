@@ -1,18 +1,113 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import PostListItem from '../../components/PostListItem.astro';
+import { getFeaturedProjects, getPosts } from '../../lib/content';
 import { t, localizePath } from '../../i18n/ui';
 
 const lang = 'zh' as const;
+
+const featured = await getFeaturedProjects(lang, 3);
+const allProjects = await getFeaturedProjects(lang);
+const latestPosts = (await getPosts(lang)).slice(0, 3);
+
+const typedPhrases = ['香港科技大學計算機科學學生。', '喜歡貼近硬件的開發。', '正在公開學習。'];
 ---
 
 <BaseLayout lang={lang}>
-  <section>
-    <h1>{t(lang, 'site.title')}</h1>
-    <p>{t(lang, 'site.tagline')}</p>
+  <Hero lang={lang} headline={t(lang, 'site.title')} phrases={typedPhrases} />
+
+  <section class="block">
+    <SectionHeading action={{ href: localizePath(lang, '/projects'), label: t(lang, 'projects.title') }}>
+      {t(lang, 'section.featured')}
+    </SectionHeading>
+
+    {
+      featured.length > 0 ? (
+        <ul class="grid">
+          {featured.map((project) => (
+            <li>
+              <ProjectCard project={project} lang={lang} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">項目即將加入。</p>
+      )
+    }
+
+    {
+      allProjects.length > featured.length ? (
+        <p class="more">
+          <a href={localizePath(lang, '/projects')}>
+            查看全部項目 ({allProjects.length}) →
+          </a>
+        </p>
+      ) : null
+    }
   </section>
 
-  <section>
-    <h2>{t(lang, 'section.featured')}</h2>
-    <p><a href={localizePath('zh', '/projects')}>{t(lang, 'nav.projects')}</a></p>
+  <section class="block">
+    <SectionHeading action={{ href: localizePath(lang, '/blog'), label: t(lang, 'blog.title') }}>
+      最新文章
+    </SectionHeading>
+
+    {
+      latestPosts.length > 0 ? (
+        <ul class="posts">
+          {latestPosts.map((post) => (
+            <PostListItem post={post} lang={lang} />
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">文章即將發佈。</p>
+      )
+    }
+  </section>
+
+  <section class="block">
+    <SectionHeading>{t(lang, 'section.contact')}</SectionHeading>
+    <p>
+      <a href="mailto:fwhuang@connect.ust.hk">fwhuang@connect.ust.hk</a>
+      {' · '}
+      <a href="https://github.com/lyimou" rel="noopener noreferrer" target="_blank">GitHub</a>
+    </p>
   </section>
 </BaseLayout>
+
+<style>
+  .block {
+    margin-block: 3.5rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .posts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .muted {
+    color: var(--text-muted);
+  }
+  .more {
+    margin-top: 1.5rem;
+  }
+  @media (max-width: 64rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 48rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

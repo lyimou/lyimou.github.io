@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import PostListItem from '../../../../components/PostListItem.astro';
+import Pagination from '../../../../components/Pagination.astro';
+import { getPosts } from '../../../../lib/content';
+import { t } from '../../../../i18n/ui';
+
+const lang = 'zh' as const;
+
+/* getStaticPaths runs outside module-init scope — declare its constants inline. */
+export async function getStaticPaths() {
+  const postsPerPage = 5;
+  const posts = await getPosts('zh');
+  const lastPage = Math.max(1, Math.ceil(posts.length / postsPerPage));
+  return Array.from({ length: Math.max(0, lastPage - 1) }, (_, i) => ({
+    params: { page: String(i + 2) },
+    props: { page: i + 2 },
+  }));
+}
+
+const POSTS_PER_PAGE = 5;
+const { page } = Astro.props;
+const posts = await getPosts('zh');
+const lastPage = Math.max(1, Math.ceil(posts.length / POSTS_PER_PAGE));
+const pagePosts = posts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
+---
+
+<BaseLayout lang={lang} title={`${t(lang, 'blog.title')} — ${page}/${lastPage}`}>
+  <h1>{t(lang, 'blog.title')}</h1>
+
+  {
+    pagePosts.length > 0 ? (
+      <ul class="posts">
+        {pagePosts.map((post) => (
+          <PostListItem post={post} lang={lang} />
+        ))}
+      </ul>
+    ) : (
+      <p class="muted">{t(lang, 'blog.empty')}</p>
+    )
+  }
+
+  <Pagination currentPage={page} lastPage={lastPage} basePath="/blog" lang={lang} />
+</BaseLayout>
+
+<style>
+  .posts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .muted {
+    color: var(--text-muted);
+  }
+</style>
