@@ -32,11 +32,13 @@ Each mode produces metrics on different scales, so each is normalised to 0–1 a
 - **Track** — 60% time-on-target, 40% steadiness (inverse mean deviation)
 - **Micro-adjust** — 70% accuracy, 30% precision
 
-Overshoot enters as a penalty rather than a bonus: both stopping short and flying past mean the sensitivity does not match your motor range. The goal is *arrives on target*.
+Precision is the **mean distance from the target centre** when the shot was taken. It is a distance, not a direction, so stopping short and flying past cost exactly the same. The goal is *arrives on target*.
 
 ## Engineering notes
 
 **No dependencies, not even a charting library.** The five report charts are about 300 lines of canvas. That keeps the tool working offline, removes any third-party request on load, and means there is no build step at all. What ships is a staged allowlist of exactly the files the browser requests, so the test harness and dev screenshots never reach the public site.
+
+**Text logic is separated from text.** The scorer, engine and charts never contain a user-facing sentence — they return translation keys, and the locale layer owns the wording and the number formatting. That is what makes English and Traditional Chinese both first-class, including the labels the canvas charts draw for themselves. The language resolves from a saved choice, then `?lang=`, then the browser's own list; the URL is read but never written, so switching languages adds no history entries.
 
 **The maths is separate from the DOM.** `sensitivity.js` and `recommend.js` import nothing from the browser, so they run under plain Node and are unit-tested without a headless browser.
 
@@ -44,22 +46,30 @@ Overshoot enters as a penalty rather than a bonus: both stopping short and flyin
 
 **Robustness was a requirement, not an afterthought.** Losing pointer lock, switching windows or hiding the tab all pause the round with an explanatory overlay rather than silently scoring you on input you never made. Every round also has a hard time limit, so a round can never hang.
 
-## Two bugs worth writing down
+## Bugs worth writing down
 
-Both were **silent** — the code produced confident, plausible output and nothing threw. Only the tests caught them.
+All of these were **silent** — the code produced confident, plausible output and nothing threw. Only the tests caught them.
 
 **An inverted scoring term.** One metric was normalised as `1 - lerpScore(...)`, but `lerpScore` already maps the good end to 1 — so a *smaller* overshoot scored *worse*. The inverted term simply contributed ~0, which looked exactly like a mis-calibrated tolerance. I chased the wrong theory (adjusting reference values, which changed nothing) before decomposing the score term by term and finding the sign error.
 
 **A malformed normal-equations matrix.** In the least-squares fit, Σx and the sample count were transposed, so the matrix was not symmetric. The fit returned a peak of 1.25 where the exact answer was 1.0. It looked plausible, and the only reason it surfaced is that I compared the fit against a hand-computed parabola.
 
-The lesson I took: when a numeric result is *wrong but reasonable*, test the direction and the exactness of each term individually instead of checking the total for plausibility.
+**A precision metric that could only punish one mistake.** Precision was computed as `max(0, distance − radius)`: the distance to the target's *edge*, floored at zero. It recorded exactly `0` on any hit, so a player who undershot *every* target collected full marks on a term weighted 12% of the flick score and 30% of the micro score — while the documentation claimed both error directions were penalised. Measuring radial error instead makes the two cost the same by construction.
+
+**Reaction time that excluded every miss.** Reaction times were recorded only in the hit branch, so a player who missed slowly was scored on their fast hits and the speed term rewarded missing.
+
+**A test that could not see the bug.** The suite already asserted that "less overshoot helps" — and passed throughout, because it fed `overshootRatio` straight into the scoring function. It tested the formula in isolation and never exercised the value the engine actually produced. The fix was to test the metric computation itself, not just the formula that consumes it.
+
+**A fourth term that was always 100%.** Track mode never increments misses, so its accuracy was `10/10` on every run, and it displayed a "reaction time" measured from a single target spawned at the start of the round. Neither affected scoring — but both were displayed as if they meant something.
+
+The lesson I took: when a numeric result is *wrong but reasonable*, test the direction and the exactness of each term individually instead of checking the total for plausibility. And a test that stubs out the layer where the bug lives will happily confirm that the bug is absent.
 
 ## Verification
 
-- **22 unit tests** on the sensitivity maths — cm/360 against known reference values, cross-game conversion round-trips, and the curve fit against exactly-generated parabolas
-- **48 unit tests** on the scoring and recommendation — direction of every metric, full dynamic range, monotonicity, and every branch of the decision tree
-- **22 browser checks** — no console errors, form validation, 44px touch targets and no overflow at 1440 / 768 / 375
-- **19 end-to-end checks** driving a real round: metrics collected, scored, curve-fitted and charted
+- **115 unit assertions** across four suites, all in plain Node with no test framework: cm/360 against known reference values, the curve fit against exactly-generated parabolas, the direction *and* the dynamic range of every scoring metric, the metric computation itself driven with engine-shaped rounds, and translation coverage (both locales carry the same keys, and every `{placeholder}` matches)
+- **33 browser checks** — no console errors, form validation, 44px touch targets and no overflow at 1440 / 768 / 375, plus the language toggle end to end: it switches the page, the title, the canvas text and persists across a reload
+- **23 end-to-end checks** driving a real round: metrics collected, scored, curve-fitted and charted
+- **Both Node 20 and 22** in CI, because a Node-20-only crash once passed locally on a newer runtime
 
 ## What I would do differently
 
