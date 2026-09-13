@@ -1,0 +1,109 @@
+---
+title: 'How I structure prompts for coding agents'
+description: 'Six techniques that turned an open-ended "build me a website" request into a working site in eight approved steps — including the four mistakes that showed me why each technique matters.'
+tags: ['ai', 'workflow', 'engineering']
+category: 'engineering'
+lang: 'en'
+translationKey: 'agent-prompting'
+pubDate: 2026-09-13
+---
+
+I built this site by delegating almost all of it to a coding agent. The interesting part was not the code — it was the working protocol I wrapped around the agent, and the specific ways that protocol failed before it worked.
+
+This is a write-up of the request structure I used, so that it can be reused.
+
+## The problem with "build me a personal website"
+
+That prompt is not a specification, it is a wish. An agent will happily produce something, and you will have no basis for saying whether it is right. Every correction afterwards is expensive because there is no shared definition of done.
+
+Worse, an agent given a vague goal will *fill in the gaps itself*. Some of those guesses will be good. The ones that are not are the expensive ones, because you discover them late — after three layers of work have been built on top.
+
+So the protocol below exists to move decisions *earlier*, where they are cheap.
+
+## The structure: six phases, each with an approval gate
+
+The request was organised as explicit phases, and the agent was told not to skip ahead:
+
+1. **Clarify and restate** — before any code, state the requirement slots, quantify vague style words, produce a two-layer restatement (literal + underlying intent), and ask at most 3–5 blocking questions.
+2. **Write a requirements file** — a single-source-of-truth document containing design tokens, schemas, page list, and a change log.
+3. **Break down and approve** — split the work into tiers with dependencies, and stop for approval.
+4. **Execute in stages** — one tier at a time.
+5. **Detect drift** — when reality contradicts the plan, update the document, not just the code.
+6. **Merge and deliver.**
+
+The single most valuable rule in that list is the approval gate. It converts a long unsupervised run into a sequence of short supervised ones.
+
+## Technique 1: make the agent restate the goal, twice
+
+Before writing anything, I required two paragraphs:
+
+- a **literal restatement** (what you asked for), and
+- a **deeper restatement** (what you actually want, plus the constraints you did not state).
+
+The deeper version is where the value is. For this project it surfaced "the site itself is a work sample, so performance and accessibility are content, not polish", and "the technology stack was given as a constraint, not a topic for debate". Neither of those was in my original message, but both changed later decisions.
+
+If the deeper restatement is wrong, you have lost one message. If it is missing, you may lose a week.
+
+## Technique 2: quantify every vague style word
+
+"Clean and modern" is not actionable. The request required style words to be converted into concrete tokens — colours as hex values, type scale in pixels, spacing on a named base unit, radii and shadows as explicit values.
+
+The payoff arrives later, in an unexpected place: once the palette exists as values, it can be **measured**. My agent caught that white text on the proposed dark-mode accent colour was 2.54:1 — below the 4.5:1 accessibility floor. You cannot audit "a fresh cyan". You can audit `#60A5FA`.
+
+## Technique 3: force a written source of truth
+
+Phase 2 produced a requirements file, with one rule attached: **the file wins over the conversation**.
+
+This matters because long agent sessions drift. A decision made at message 4 is invisible by message 40, and the agent will quietly re-derive it — sometimes differently. A written file gives both parties something to point at, and it makes change visible: every decision either already exists in the file or is a proposal to amend it.
+
+I also required the file to mark every item as confirmed / pending / assumed / dropped. Assumptions are the dangerous category, and they are much safer when they are labelled.
+
+## Technique 4: verified claims only, with the tools doing the verifying
+
+"Done" from an agent is a claim, not evidence. The rule was: if a check can be deterministic, it must be a script, not a judgement.
+
+So the project ended up with five small verification scripts rather than assurances:
+
+- a **contrast audit** that computes WCAG ratios from the token values;
+- a **JavaScript budget** that unzips the built pages and measures the inlined script bytes;
+- a **visual harness** that screenshots every page at three viewports and detects overflow and undersized touch targets;
+- an **accessibility harness** that drives a real browser: keyboard reachability, focus visibility, heading order, and whether the toggles actually change state;
+- a **link audit**, first against the build output and then against the live domain.
+
+The important consequence: the agent could not say "the layout is fine". It had to run something that could fail.
+
+## Technique 5: ask for permission in tiers, not in bulk
+
+Approving an entire project up front is the same as not reviewing it. The request instead split work into tiers — skeleton, design system, pages, interactions, content, deployment — and required an explicit approval between each.
+
+That is more round-trips, and it is worth it. Two of the eight tiers revealed a wrong assumption that would have been expensive later.
+
+## Technique 6: state what must never be invented
+
+The last rule was a content rule: **do not fabricate project outcomes, metrics, awards, or dates.** Anything written about my work had to be traceable to something I supplied, or to a file in a repository.
+
+This sounds like an ethics note. It is actually a correctness note: an agent that invents a plausible metric produces a *worse* artefact than one that leaves a placeholder, because a placeholder is obviously unfinished while an invented number looks finished and is false.
+
+## The four mistakes, which taught me more
+
+I asked the agent to record its own failures. All four of the following are real, from this project.
+
+**1. It reported a sandbox error as a project bug.** A build failed with an exit code, and the first explanation was a resource limit. The actual cause was a JavaScript scoping rule: `getStaticPaths()` in the framework runs outside the module-initialisation scope, so it cannot read top-level constants. The lesson is not "the agent was wrong" — it is that an agent will offer a plausible *narrative* for a failure. Ask for the raw error and the reproduction, not the story.
+
+**2. An encoding trap destroyed a file, and then got committed.** A file was rewritten through a tool that inserted a byte-order mark and mangled non-ASCII text. A component of the document was lost, and the damage was baked into the initial commit. Two things fixed it: checking the *original* source when a file looks wrong, and adding a check that catches it.
+
+**3. It announced a fix for a bug that did not exist.** The agent's test read `window.game`. A top-level `let` in a classic script creates a global *lexical* binding, not a window property — so the test said "undefined" for a game that had been loading correctly all along. The agent then "fixed" the non-existent problem. This is the most instructive failure of the four: **a wrong probe produces a confident wrong conclusion**, and the fix is to assert on the subject itself, not on a proxy you assumed was equivalent.
+
+**4. My instructions conflicted, and the agent had to choose.** I said "do not publish any course code" and later "fill the site with course content". Those cannot both hold. The useful behaviour was not to silently pick one — it was to state the conflict, choose the conservative reading (describe the work, do not reproduce the material), and ask for confirmation. I want that behaviour, so I have to make room for it: a good agent should be allowed to say "these two instructions disagree".
+
+## What I would tell someone starting this
+
+- **Front-load the questions.** Five minutes of clarification beats five hours of rework.
+- **Make the agent write the spec.** If it cannot restate your goal in two layers, it does not understand it yet.
+- **Turn style into numbers**, so that taste becomes testable.
+- **Ask for scripts, not assurances.** Every "verified" should name the check that produced it.
+- **Approve in slices.** Autonomy is valuable at the task level and dangerous at the project level.
+- **Say what must not be invented.** Otherwise something plausible and false will end up in your portfolio.
+- **Make failure reporting part of the job.** The four mistakes above are in this article because I asked for them, and they are more useful than the successes.
+
+The protocol is not specific to building a website. The same shape — clarify, write it down, verify with tools, approve in tiers, forbid invention — applies to almost any long delegation.

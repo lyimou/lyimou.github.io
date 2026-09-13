@@ -45,7 +45,12 @@ const giscus = {
 const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
 ---
 
-<BaseLayout lang={lang} title={data.title} description={data.description}>
+<BaseLayout
+  lang={lang}
+  title={data.title}
+  description={data.description}
+  ogImage={`/og/${lang}/${slug}.png`}
+>
   <div class="progress" aria-hidden="true"><span data-reading-progress></span></div>
 
   <div class="post-layout">
