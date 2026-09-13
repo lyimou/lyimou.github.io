@@ -36,7 +36,7 @@ Overshoot enters as a penalty rather than a bonus: both stopping short and flyin
 
 ## Engineering notes
 
-**No dependencies, not even a charting library.** The five report charts are about 300 lines of canvas. That keeps the tool working offline, removes any third-party request on load, and means there is no build step at all — the repository root *is* the deployed site.
+**No dependencies, not even a charting library.** The five report charts are about 300 lines of canvas. That keeps the tool working offline, removes any third-party request on load, and means there is no build step at all. What ships is a staged allowlist of exactly the files the browser requests, so the test harness and dev screenshots never reach the public site.
 
 **The maths is separate from the DOM.** `sensitivity.js` and `recommend.js` import nothing from the browser, so they run under plain Node and are unit-tested without a headless browser.
 
