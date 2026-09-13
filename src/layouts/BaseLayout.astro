@@ -9,9 +9,15 @@ interface Props {
   description?: string;
   /** Override the locale when a page is not at a locale-prefixed URL. */
   lang?: Lang;
+  /**
+   * Suppress the hreflang alternates. Use on pages that exist in only one
+   * language (404, dev tooling) — emitting alternates for them produces links
+   * to routes that were never generated. Caught by scripts/verify-links.mjs.
+   */
+  noAlternates?: boolean;
 }
 
-const { title, description, lang: langProp } = Astro.props;
+const { title, description, lang: langProp, noAlternates = false } = Astro.props;
 const site = Astro.site ?? new URL('https://lyimou.github.io');
 const lang: Lang = langProp ?? getLangFromUrl(Astro.url);
 const canonical = new URL(Astro.url.pathname, site).href;
@@ -52,12 +58,30 @@ const isCurrent = (href: string) => currentPath === href;
     <meta name="description" content={pageDescription} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate" hreflang="en" href={switchLocalePath(Astro.url.pathname, 'en')} />
-    <link rel="alternate" hreflang="zh-Hant" href={switchLocalePath(Astro.url.pathname, 'zh')} />
+    {
+      noAlternates ? null : (
+        <>
+          <link rel="alternate" hreflang="en" href={switchLocalePath(Astro.url.pathname, 'en')} />
+          <link
+            rel="alternate"
+            hreflang="zh-Hant"
+            href={switchLocalePath(Astro.url.pathname, 'zh')}
+          />
+        </>
+      )
+    }
+    {/* There is a single English feed, so link it unconditionally — using
+        localizePath() here would emit /zh/rss.xml, which does not exist. */}
+    <link rel="alternate" type="application/rss+xml" title={`${t(lang, 'site.title')} — RSS`} href="/rss.xml" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={t(lang, 'site.title')} />
+    <meta property="og:locale" content={lang === 'zh' ? 'zh_Hant' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
     <meta name="generator" content={Astro.generator} />
     <!--
       Theme + motion bootstrap, inline and tiny so the correct theme is applied
@@ -100,9 +124,13 @@ const isCurrent = (href: string) => currentPath === href;
 
         <div class="site-header__controls">
           <ThemeToggle lang={lang} />
-          <a class="lang-switch" href={switchHref} hreflang={otherLang} rel="alternate">
-            {languages[otherLang]}
-          </a>
+          {
+            noAlternates ? null : (
+              <a class="lang-switch" href={switchHref} hreflang={otherLang} rel="alternate">
+                {languages[otherLang]}
+              </a>
+            )
+          }
         </div>
       </Container>
     </header>
