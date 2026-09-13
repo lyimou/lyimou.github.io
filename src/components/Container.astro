@@ -1,0 +1,31 @@
+---
+/**
+ * Page-width wrapper. 1100px keeps a comfortable measure on desktop while
+ * still allowing a 3-column project grid.
+ */
+interface Props {
+  class?: string;
+  as?: 'div' | 'section' | 'main' | 'header' | 'footer';
+}
+
+const { class: className = '', as: Tag = 'div' }: Props = Astro.props;
+---
+
+<Tag class:list={['container-page', className]}>
+  <slot />
+</Tag>
+
+<style>
+  .container-page {
+    width: 100%;
+    max-width: var(--container-page);
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  @media (max-width: 48rem) {
+    .container-page {
+      padding-inline: 1rem;
+    }
+  }
+</style>

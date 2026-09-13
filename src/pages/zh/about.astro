@@ -1,0 +1,186 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Prose from '../../components/Prose.astro';
+import Tag from '../../components/Tag.astro';
+import { t } from '../../i18n/ui';
+
+const lang = 'zh' as const;
+
+const experience = [
+  {
+    role: '兼職技術助理（Part-time Technical Assistant）',
+    org: 'SDALWINDOW',
+    period: '2026 年 1 月 – 2026 年 2 月（30 天）',
+    points: [
+      '在持牌窗戶檢驗師傅指導下，擔任技術操作與客戶溝通之間的橋樑。',
+      '協助強制驗窗計劃下鋁窗的檢驗、保養與小型更換工作。',
+      '向客戶清楚解釋作業流程與工程細節，確保項目順利推進並讓客戶理解。',
+    ],
+  },
+  {
+    role: '學生助手（計算機科學系）',
+    org: '香港科技大學',
+    period: '2025 年 11 月（單日活動）',
+    points: [
+      '向本地與國際準學生及其家長，介紹計算機科學（COMP）課程的課程特色、升學路徑與就業前景。',
+      '針對不同背景調整講解方式，有效推廣學系優勢並回應提問。',
+    ],
+  },
+  {
+    role: '銷售及推廣助理（書展）',
+    org: '4M Industrial Development Limited',
+    period: '2024 年 7 月（6 天）',
+    points: [
+      '負責書展期間科學玩具產品的現場銷售、推廣與客戶服務，透過主動溝通與精準推薦提升客戶滿意度。',
+      '支援活動後勤，包括攤位搭建與庫存管理，確保展覽順利運作。',
+    ],
+  },
+];
+
+const skills = {
+  built: [
+    'C++',
+    'Python',
+    'Java',
+    'JavaScript',
+    'HTML/CSS',
+    'TensorFlow / Keras',
+    'scikit-learn',
+    'Arduino / C++',
+    'Git',
+  ],
+  familiar: ['Microsoft Word', 'PowerPoint', 'Outlook', 'Excel', 'Blender', 'Adobe Premiere'],
+  languages: ['英文（流利）', '廣東話（母語）', '普通話（母語）'],
+};
+---
+
+<BaseLayout lang={lang} title={t(lang, 'about.title')}>
+  <h1>{t(lang, 'about.title')}</h1>
+
+  <Prose>
+    <p>
+      我最大的優點在於擁有成長型心態。我堅信能力並非天生固定，而是可以通過不懈努力和有效策略來培養。這種信念使我將每一個困難視為進步的墊腳石。
+    </p>
+    <p>
+      但這種逐步改進的思維模式，似乎不知不覺中引出了我的弱點：事物整體觀察力欠佳。不少時候，我會下意識地傾向於先「動手」投入具體細節，而減少了在全局層面進行系統性構思的時間。在現今的 AI
+      時代，大模型的使用離不開合適的大局觀構造能力。我的應對方式是：在動手之前先做一次結構性提問，把「望遠鏡」與「顯微鏡」的視角分開使用。
+    </p>
+  </Prose>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'about.education')}</SectionHeading>
+    <div class="entry">
+      <div class="entry__head">
+        <h3 class="entry__title">計算機科學 工學士（BEng in Computer Science）</h3>
+        <span class="entry__period">2023 – 2028（預計）</span>
+      </div>
+      <p class="entry__org">香港科技大學</p>
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'about.experience')}</SectionHeading>
+    <div class="stack">
+      {
+        experience.map((job) => (
+          <div class="entry">
+            <div class="entry__head">
+              <h3 class="entry__title">{job.role}</h3>
+              <span class="entry__period">{job.period}</span>
+            </div>
+            <p class="entry__org">{job.org}</p>
+            <ul class="entry__points">
+              {job.points.map((point) => (
+                <li>{point}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'about.skills')}</SectionHeading>
+
+    <h3 class="skills__label">{t(lang, 'about.skills.built')}</h3>
+    <div class="skills__row">
+      {skills.built.map((s) => <Tag tone="primary">{s}</Tag>)}
+    </div>
+
+    <h3 class="skills__label">{t(lang, 'about.skills.familiar')}</h3>
+    <div class="skills__row">
+      {skills.familiar.map((s) => <Tag>{s}</Tag>)}
+    </div>
+
+    <h3 class="skills__label">{t(lang, 'about.skills.languages')}</h3>
+    <div class="skills__row">
+      {skills.languages.map((s) => <Tag>{s}</Tag>)}
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'section.contact')}</SectionHeading>
+    <p>
+      <a href="mailto:fwhuang@connect.ust.hk">fwhuang@connect.ust.hk</a>
+      {' · '}
+      <a href="https://github.com/lyimou" rel="noopener noreferrer" target="_blank">GitHub</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .stack {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .entry__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .entry__title {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  .entry__period {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  .entry__org {
+    margin: 0.125rem 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  .entry__points {
+    margin: 0;
+    padding-left: 1.25rem;
+    max-width: var(--measure-prose);
+  }
+
+  .entry__points li {
+    margin-block: 0.375rem;
+  }
+
+  .skills__label {
+    margin: 1.5rem 0 0.625rem;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .skills__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+</style>

@@ -1,0 +1,52 @@
+---
+/**
+ * Section heading with a hairline rule. Keeps vertical rhythm identical on
+ * every page instead of each page inventing its own spacing.
+ */
+interface Props {
+  id?: string;
+  level?: 'h2' | 'h3';
+  action?: { href: string; label: string };
+}
+
+const { id, level: Level = 'h2', action } = Astro.props;
+---
+
+<div class="section-heading">
+  <Level id={id} class="section-heading__title">
+    <slot />
+  </Level>
+  {
+    action ? (
+      <a class="section-heading__action" href={action.href}>
+        {action.label}
+      </a>
+    ) : null
+  }
+</div>
+
+<style>
+  .section-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--divider);
+  }
+
+  .section-heading__title {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .section-heading__action {
+    display: inline-flex;
+    align-items: center;
+    /* Keeps the action link a 44px touch target. */
+    min-height: 2.75rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+</style>

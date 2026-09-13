@@ -1,0 +1,192 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import Prose from '../components/Prose.astro';
+import Tag from '../components/Tag.astro';
+import { t } from '../i18n/ui';
+
+const lang = 'en' as const;
+
+const experience = [
+  {
+    role: 'Part-time Technical Assistant',
+    org: 'SDALWINDOW',
+    period: 'Jan 2026 – Feb 2026 (30 days)',
+    points: [
+      'Served as a bridge between technical operations and client communication under the guidance of a licensed window inspection master.',
+      'Assisted in the inspection, maintenance, and minor replacements of aluminum windows under the Mandatory Window Inspection Scheme.',
+      'Explained work procedures and project details to clients clearly, ensuring smooth project progression and customer understanding.',
+    ],
+  },
+  {
+    role: 'Student Helper, School of Computer Science',
+    org: 'The Hong Kong University of Science and Technology',
+    period: 'Nov 2025 (one-day event)',
+    points: [
+      "Delivered clear and engaging presentations on the Computer Science (COMP) program's curriculum features, further study pathways, and career prospects to a diverse audience of prospective local and international students, and parents.",
+      "Adapted explanations to suit different backgrounds, effectively promoting the department's strengths and addressing inquiries.",
+    ],
+  },
+  {
+    role: 'Sales and Promotion Assistant (Book Fair)',
+    org: '4M Industrial Development Limited',
+    period: 'Jul 2024 (6 days)',
+    points: [
+      'Managed on-site sales, promotion, and customer service for scientific toy products during the book fair, enhancing customer satisfaction through proactive communication and precise product recommendations.',
+      'Supported event logistics, including booth setup and inventory management, to ensure the smooth operation of the exhibition.',
+    ],
+  },
+];
+
+const skills = {
+  built: [
+    'C++',
+    'Python',
+    'Java',
+    'JavaScript',
+    'HTML/CSS',
+    'TensorFlow / Keras',
+    'scikit-learn',
+    'Arduino / C++',
+    'Git',
+  ],
+  familiar: ['Microsoft Word', 'PowerPoint', 'Outlook', 'Excel', 'Blender', 'Adobe Premiere'],
+  languages: ['English (fluent)', 'Cantonese (native)', 'Putonghua (native)'],
+};
+---
+
+<BaseLayout lang={lang} title={t(lang, 'about.title')}>
+  <h1>{t(lang, 'about.title')}</h1>
+
+  <Prose>
+    <p>
+      I am a Computer Science student at HKUST. My strongest habit is a growth mindset: I treat
+      ability as something built through deliberate effort rather than something fixed, so an
+      unfamiliar language or a complicated system is a problem to break down, not a reason to step
+      back.
+    </p>
+    <p>
+      I have also learned to watch for my own bias. I tend to dive straight into details and spend
+      too little time framing the problem first — which costs time on things that do not matter, and
+      matters even more when working with large language models, where the quality of the framing
+      decides whether a project moves. My correction is to ask the structural questions before
+      writing anything, and to keep the telescope and the microscope separate.
+    </p>
+  </Prose>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'about.education')}</SectionHeading>
+    <div class="entry">
+      <div class="entry__head">
+        <h3 class="entry__title">BEng in Computer Science</h3>
+        <span class="entry__period">2023 – 2028 (expected)</span>
+      </div>
+      <p class="entry__org">The Hong Kong University of Science and Technology</p>
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'about.experience')}</SectionHeading>
+    <div class="stack">
+      {
+        experience.map((job) => (
+          <div class="entry">
+            <div class="entry__head">
+              <h3 class="entry__title">{job.role}</h3>
+              <span class="entry__period">{job.period}</span>
+            </div>
+            <p class="entry__org">{job.org}</p>
+            <ul class="entry__points">
+              {job.points.map((point) => (
+                <li>{point}</li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'about.skills')}</SectionHeading>
+
+    <h3 class="skills__label">{t(lang, 'about.skills.built')}</h3>
+    <div class="skills__row">
+      {skills.built.map((s) => <Tag tone="primary">{s}</Tag>)}
+    </div>
+
+    <h3 class="skills__label">{t(lang, 'about.skills.familiar')}</h3>
+    <div class="skills__row">
+      {skills.familiar.map((s) => <Tag>{s}</Tag>)}
+    </div>
+
+    <h3 class="skills__label">{t(lang, 'about.skills.languages')}</h3>
+    <div class="skills__row">
+      {skills.languages.map((s) => <Tag>{s}</Tag>)}
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>{t(lang, 'section.contact')}</SectionHeading>
+    <p>
+      <a href="mailto:fwhuang@connect.ust.hk">fwhuang@connect.ust.hk</a>
+      {' · '}
+      <a href="https://github.com/lyimou" rel="noopener noreferrer" target="_blank">GitHub</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .stack {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .entry__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .entry__title {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  .entry__period {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
+
+  .entry__org {
+    margin: 0.125rem 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  .entry__points {
+    margin: 0;
+    padding-left: 1.25rem;
+    max-width: var(--measure-prose);
+  }
+
+  .entry__points li {
+    margin-block: 0.375rem;
+  }
+
+  .skills__label {
+    margin: 1.5rem 0 0.625rem;
+    font-size: 0.9375rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .skills__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+</style>

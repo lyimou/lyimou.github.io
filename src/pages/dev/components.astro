@@ -1,0 +1,154 @@
+---
+/**
+ * Development-only component gallery (T2 deliverable).
+ *
+ * Renders every atom in every variant so the design system can be reviewed in
+ * one place instead of hunting through pages. Not linked from the site nav.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/Button.astro';
+import Card from '../../components/Card.astro';
+import Tag from '../../components/Tag.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import Prose from '../../components/Prose.astro';
+import ThemeToggle from '../../components/ThemeToggle.astro';
+
+const lang = 'en' as const;
+
+const swatches = [
+  { name: 'bg', varName: 'var(--bg)' },
+  { name: 'surface', varName: 'var(--surface)' },
+  { name: 'divider', varName: 'var(--divider)' },
+  { name: 'border', varName: 'var(--border)' },
+  { name: 'text', varName: 'var(--text)' },
+  { name: 'text-muted', varName: 'var(--text-muted)' },
+  { name: 'primary', varName: 'var(--primary)' },
+  { name: 'primary-fill', varName: 'var(--primary-fill)' },
+  { name: 'primary-soft', varName: 'var(--primary-soft)' },
+];
+---
+
+<BaseLayout lang={lang} title="Component gallery">
+  <h1>Component gallery</h1>
+  <p>
+    Development page for reviewing the design system. Tokens are audited by
+    <code>scripts/contrast-check.mjs</code>; this page is for visual review.
+  </p>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>Toggles</SectionHeading>
+    <ThemeToggle lang={lang} />
+    <p style="color: var(--text-muted); font-size: 0.875rem;">
+      Buttons are inert until T4 wires the island. State cycling: system → light → dark.
+    </p>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>Buttons</SectionHeading>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+      <Button href="#primary">Primary</Button>
+      <Button href="#secondary" variant="secondary">Secondary</Button>
+      <Button href="#ghost" variant="ghost">Ghost</Button>
+      <Button href="#small" size="sm" data-compact>Small (compact — not for standalone touch use)</Button>
+      <Button type="submit" variant="secondary">Submit button</Button>
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>Tags</SectionHeading>
+    <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+      <Tag>Python</Tag>
+      <Tag>C++</Tag>
+      <Tag>TensorFlow</Tag>
+      <Tag tone="primary">Astro</Tag>
+      <Tag href="#linked">Linked tag</Tag>
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading action={{ href: '#all', label: 'View all' }}>Cards</SectionHeading>
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1.5rem;"
+    >
+      <Card href="#one">
+        <h3 style="margin-top: 0;">Linked card</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">
+          Hover changes the border and adds a shadow — no shadow at rest.
+        </p>
+        <div style="display: flex; gap: 0.375rem; flex-wrap: wrap;">
+          <Tag>C++11</Tag>
+          <Tag>Makefile</Tag>
+        </div>
+      </Card>
+
+      <Card>
+        <h3 style="margin-top: 0;">Static card</h3>
+        <p style="color: var(--text-muted); margin: 0;">
+          Used for content that is not a link.
+        </p>
+      </Card>
+
+      <Card interactive>
+        <h3 style="margin-top: 0;">Interactive card</h3>
+        <p style="color: var(--text-muted); margin: 0;">
+          Hover affordance without being a link.
+        </p>
+      </Card>
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>Colour tokens</SectionHeading>
+    <div
+      style="display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem;"
+    >
+      {
+        swatches.map((s) => (
+          <div>
+            <div
+              style={`height:3.5rem;border-radius:var(--radius-card);border:1px solid var(--divider);background:${s.varName};`}
+            />
+            <code style="display:block;margin-top:0.5rem;font-size:0.75rem;">{s.name}</code>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>Prose / typography</SectionHeading>
+    <Prose>
+      <h2>Heading level two</h2>
+      <p>
+        Body copy at 16px with a 1.75 line height and a 68ch measure. This is the
+        reading experience for blog posts and project write-ups, so it is tuned
+        for comfort over density.
+      </p>
+      <h3>Heading level three</h3>
+      <ul>
+        <li>List item with <a href="#link">an inline link</a>.</li>
+        <li>Second item with <code>inline code</code>.</li>
+      </ul>
+      <blockquote>A blockquote picks up a left rule and muted text.</blockquote>
+      <pre><code>def predict(x):
+    return model(x)  # code block: surface background, 8px radius</code></pre>
+      <table>
+        <thead>
+          <tr><th>Column</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Rows</td><td>Have hairline borders</td></tr>
+        </tbody>
+      </table>
+    </Prose>
+  </section>
+
+  <section style="margin-block: 3rem;">
+    <SectionHeading>Container width</SectionHeading>
+    <div style="border:1px dashed var(--border); border-radius:var(--radius-card); padding:1rem;">
+      <p style="margin:0;color:var(--text-muted);font-size:0.875rem;">
+        This block sits inside the 1100px page container (--container-page).
+      </p>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,54 @@
+---
+/**
+ * Card surface. No shadow at rest (the border separates it); a shadow appears
+ * only on hover, which keeps a light theme feeling calm rather than busy.
+ */
+interface Props {
+  href?: string;
+  as?: 'article' | 'div' | 'li';
+  interactive?: boolean;
+  class?: string;
+}
+
+const { href, as: Tag = 'article', interactive = false, class: className = '' }: Props = Astro.props;
+const isLink = Boolean(href);
+---
+
+{isLink ? <a href={href} class:list={['card', 'card--link', className]}><slot /></a> : <Tag class:list={['card', interactive && 'card--interactive', className]}><slot /></Tag>}
+
+<style>
+  .card {
+    display: block;
+    background-color: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-card);
+    padding: 1.5rem;
+    color: inherit;
+    text-decoration: none;
+    transition:
+      border-color 180ms ease-out,
+      box-shadow 180ms ease-out,
+      transform 180ms ease-out;
+  }
+
+  .card--link:hover,
+  .card--interactive:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-card-hover);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Only lift when motion is welcome. */
+  @media (prefers-reduced-motion: no-preference) {
+    .card--link:hover,
+    .card--interactive:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  html.reduce-motion .card--link:hover,
+  html.reduce-motion .card--interactive:hover {
+    transform: none;
+  }
+</style>

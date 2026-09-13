@@ -75,6 +75,8 @@ export const ui = {
     'motion.reduced': 'Reduced',
 
     'footer.builtWith': 'Built with Astro',
+    'a11y.skip': 'Skip to content',
+    'nav.main': 'Main',
   },
   zh: {
     'site.title': '黃浩華',
@@ -137,6 +139,8 @@ export const ui = {
     'motion.reduced': '減少',
 
     'footer.builtWith': '使用 Astro 構建',
+    'a11y.skip': '跳至主要內容',
+    'nav.main': '主導覽',
   },
 } as const;
 

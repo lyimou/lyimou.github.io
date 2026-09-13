@@ -1,0 +1,107 @@
+---
+/**
+ * Button / link styled consistently.
+ *
+ * `primary` is filled and therefore uses --primary-fill (a darker blue) so that
+ * white label text meets AA in both themes — see scripts/contrast-check.mjs.
+ */
+interface Props {
+  href?: string;
+  type?: 'button' | 'submit';
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'sm';
+  external?: boolean;
+  class?: string;
+  /**
+   * Marks a deliberately compact control (e.g. the `sm` size) so the visual
+   * audit knows it is exempt from the 44px target rule. Only use this for
+   * controls that are never the sole interaction in a touch context.
+   */
+  'data-compact'?: boolean;
+}
+
+const {
+  href,
+  type = 'button',
+  variant = 'primary',
+  size = 'md',
+  external = false,
+  class: className = '',
+  'data-compact': dataCompact,
+} = Astro.props;
+
+const isLink = Boolean(href);
+const Tag = isLink ? 'a' : 'button';
+const externalAttrs = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+<Tag
+  class:list={['btn', `btn--${variant}`, `btn--${size}`, className]}
+  href={isLink ? href : undefined}
+  type={isLink ? undefined : type}
+  data-compact={dataCompact ? '' : undefined}
+  {...externalAttrs}
+>
+  <slot />
+</Tag>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem; /* 44px minimum touch target */
+    padding: 0.5rem 1.125rem;
+    border-radius: var(--radius-button);
+    border: 1px solid transparent;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 180ms ease-out,
+      border-color 180ms ease-out,
+      color 180ms ease-out;
+  }
+
+  .btn:hover {
+    text-decoration: none;
+  }
+
+  .btn--sm {
+    min-height: 2.25rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Filled: white on --primary-fill = 5.17:1 in both themes. */
+  .btn--primary {
+    background-color: var(--primary-fill);
+    color: #ffffff;
+  }
+  .btn--primary:hover {
+    background-color: var(--primary-fill-hover);
+    color: #ffffff;
+  }
+
+  .btn--secondary {
+    background-color: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+  .btn--secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .btn--ghost {
+    background-color: transparent;
+    color: var(--primary);
+  }
+  .btn--ghost:hover {
+    background-color: var(--primary-soft);
+    color: var(--primary);
+  }
+</style>

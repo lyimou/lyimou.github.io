@@ -25,3 +25,5 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Fonts are intentionally committed: self-hosting avoids a third-party request

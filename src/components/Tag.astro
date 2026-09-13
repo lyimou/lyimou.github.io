@@ -1,0 +1,48 @@
+---
+/** Small pill label, used for tech stacks, tags and categories. */
+interface Props {
+  href?: string;
+  tone?: 'neutral' | 'primary';
+  class?: string;
+}
+
+const { href, tone = 'neutral', class: className = '' } = Astro.props;
+const Tag = href ? 'a' : 'span';
+---
+
+<Tag class:list={['tag', `tag--${tone}`, className]} href={href}>
+  <slot />
+</Tag>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.625rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--divider);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* Linked tags need a full-size touch target; static tags stay compact. */
+  a.tag {
+    min-height: 2.75rem;
+  }
+
+  a.tag:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .tag--primary {
+    background-color: var(--primary-soft);
+    border-color: transparent;
+    color: var(--primary);
+  }
+</style>

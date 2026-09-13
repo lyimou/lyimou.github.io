@@ -2,49 +2,62 @@
 
 /*
  * Design tokens — see website-requirements.md §3.
- * Light is the default; dark mode is class-based via `.dark` on <html>.
+ *
+ * All colours below are audited by `node scripts/contrast-check.mjs`
+ * (19/19 pairs pass WCAG AA). Do not change a value without re-running it.
+ *
+ * Two distinct border tokens exist on purpose:
+ *   --divider : decorative section rules. Exempt from WCAG 1.4.11 (they carry
+ *               no information), so it can stay visually quiet.
+ *   --border  : boundaries that identify a control (inputs, etc). Must meet 3:1.
  */
+
+/* Dark mode is class-based so the OS preference can be overridden explicitly. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  /* Typography */
-  --font-sans: 'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+/* Self-hosted fonts — see public/fonts/. Only the `wght` axis is shipped to
+ * keep the payload small (47 KB + 39.5 KB). Self-hosting avoids a third-party
+ * request on first paint. CJK falls back to a system font rather than pulling
+ * a multi-megabyte Chinese webfont. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin-var.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
-  --text-h1: 2.75rem; /* 44px */
-  --text-h2: 1.875rem; /* 30px */
-  --text-h3: 1.25rem; /* 20px */
-  --text-body: 1rem; /* 16px */
-  --text-small: 0.875rem; /* 14px */
-
-  /* Spacing scale (4px base) */
-  --spacing: 0.25rem;
-
-  /* Radii */
-  --radius-card: 0.75rem; /* 12px */
-  --radius-button: 0.5rem; /* 8px */
-  --radius-pill: 9999px;
-
-  /* Layout */
-  --container-page: 68.75rem; /* 1100px */
-  --measure-prose: 68ch;
-  --width-toc: 15rem; /* 240px */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-var.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191,
+    U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 /*
- * Semantic colours are plain CSS variables so that a single `.dark` class
- * flips the whole palette without duplicating utility classes.
+ * Raw palette. Everything visual references these, so switching `.dark`
+ * re-themes the entire site without duplicating a single utility class.
  */
 :root {
   --bg: #fafaf9;
   --surface: #ffffff;
-  --border: #e7e5e4;
+  --divider: #e7e5e4;
+  --border: #8f8880;
   --text: #292524;
-  --text-muted: #78716c;
+  --text-muted: #6b6560;
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-soft: #eff6ff;
-  --accent: #0d9488;
+  /* Filled buttons (light mode uses the same blue as links). */
+  --primary-fill: #2563eb;
+  --primary-fill-hover: #1d4ed8;
   --shadow-hover: 0 4px 12px rgb(15 23 42 / 0.08);
   color-scheme: light;
 }
@@ -52,27 +65,177 @@
 .dark {
   --bg: #0f172a;
   --surface: #1e293b;
-  --border: #334155;
+  --divider: #334155;
+  --border: #64748b;
   --text: #f1f5f9;
   --text-muted: #94a3b8;
+  /* Lighter blue: reads as text on dark (7.02:1). */
   --primary: #60a5fa;
   --primary-hover: #93c5fd;
   --primary-soft: #1e3a5f;
-  --accent: #2dd4bf;
+  /* Filled buttons use a darker blue so white labels stay legible (5.17:1). */
+  --primary-fill: #2563eb;
+  --primary-fill-hover: #1d4ed8;
   --shadow-hover: 0 4px 12px rgb(0 0 0 / 0.4);
   color-scheme: dark;
 }
 
-@theme inline {
+/* Expose tokens to Tailwind so utilities like `bg-surface` / `text-muted` work. */
+@theme {
+  --font-sans: 'Inter', 'Noto Sans SC', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
   --color-bg: var(--bg);
   --color-surface: var(--surface);
+  --color-divider: var(--divider);
   --color-border: var(--border);
   --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
+  --color-muted: var(--text-muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
-  --color-accent: var(--accent);
+  --color-primary-fill: var(--primary-fill);
+  --color-primary-fill-hover: var(--primary-fill-hover);
+
+  --radius-card: 0.5rem; /* 8px — one small-radius system, no mixing */
+  --radius-button: 0.5rem;
+  --radius-pill: 9999px;
+
+  --container-page: 68.75rem; /* 1100px */
+  --measure-prose: 68ch;
+  --width-toc: 15rem;
+
+  --shadow-card-hover: var(--shadow-hover);
+}
+
+/*
+ * Layout primitives for the site shell.
+ *
+ * These live in the global stylesheet on purpose: Astro does NOT add a parent's
+ * `data-astro-cid-*` attribute to a child component's root element when a class
+ * is passed to it, so a scoped `.header-inner { display:flex }` rule silently
+ * never matches `<Container class="header-inner">`. Global classes avoid that
+ * trap entirely for structural layout.
+ */
+@layer components {
+  .site-header {
+    border-bottom: 1px solid var(--divider);
+    background-color: var(--bg);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    min-height: 4.5rem;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    align-items: center;
+    /* 44px target for touch and for the focus ring. */
+    min-height: 2.75rem;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .site-brand:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .site-nav-list {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-nav-list a {
+    display: inline-flex;
+    align-items: center;
+    /* 44px target without visually enlarging the text. */
+    min-height: 2.75rem;
+    color: var(--text-muted);
+  }
+  .site-nav-list a:hover,
+  .site-nav-list a[aria-current='page'] {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .site-header__controls {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+  }
+
+  .lang-switch {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.25rem 0.75rem;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-button);
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+  }
+  .lang-switch:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    text-decoration: none;
+  }
+
+  .site-main {
+    padding-block: 4rem;
+    min-height: 60vh;
+  }
+
+  .site-footer {
+    border-top: 1px solid var(--divider);
+    padding-block: 2rem;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  .site-footer p {
+    margin: 0;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+  .skip-link:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-button);
+    padding: 0.5rem 1rem;
+  }
+
+  /*
+   * Below 1024px the nav drops to a second row rather than overflowing.
+   * Desktop is the primary target; this keeps narrow viewports intact.
+   */
+  @media (max-width: 64rem) {
+    .site-header__inner {
+      flex-wrap: wrap;
+      gap: 0.75rem 1.5rem;
+      padding-block: 0.75rem;
+    }
+    .site-nav-list {
+      gap: 1rem;
+    }
+  }
 }
 
 @layer base {
@@ -89,9 +252,59 @@
   body {
     margin: 0;
     min-height: 100vh;
+    font-size: 1rem;
   }
 
-  /* Respect the OS setting; the in-page 3-state switch overrides via .reduce-motion */
+  h1,
+  h2,
+  h3,
+  h4 {
+    line-height: 1.25;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: 2.75rem;
+  }
+  h2 {
+    font-size: 1.875rem;
+  }
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+  }
+
+  /* Visible focus indicator, on every interactive element, in both themes. */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  a {
+    color: var(--primary);
+    text-decoration: none;
+    text-underline-offset: 0.2em;
+  }
+
+  a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+  }
+
+  /*
+   * Motion policy: honour the OS setting, and allow an explicit in-page
+   * override (html.reduce-motion) for visitors who want motion off even when
+   * their OS asks for it on. No scroll-reveal animation libraries are used.
+   */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -102,6 +315,7 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 
@@ -111,21 +325,6 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-
-  :focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-    border-radius: 2px;
-  }
-
-  a {
-    color: var(--primary);
-    text-decoration: none;
-  }
-
-  a:hover {
-    color: var(--primary-hover);
-    text-decoration: underline;
+    scroll-behavior: auto !important;
   }
 }

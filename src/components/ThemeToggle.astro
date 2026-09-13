@@ -1,0 +1,90 @@
+---
+/**
+ * Theme + motion controls.
+ *
+ * T2 ships this as a static, non-hydrated control: markup and styling are
+ * final, but the click handling arrives in T4 together with the rest of the
+ * islands. It is marked `data-island="pending"` so T4 can find it.
+ */
+import { t, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<div class="toggle-group" data-island="pending">
+  <button
+    type="button"
+    class="toggle"
+    id="theme-toggle"
+    aria-label={t(lang, 'theme.label')}
+    aria-live="polite"
+    data-state="system"
+  >
+    <span class="toggle__icon" aria-hidden="true">◐</span>
+    <span class="toggle__text" data-theme-label>{t(lang, 'theme.system')}</span>
+  </button>
+
+  <button
+    type="button"
+    class="toggle"
+    id="motion-toggle"
+    aria-label={t(lang, 'motion.label')}
+    aria-live="polite"
+    data-state="system"
+  >
+    <span class="toggle__icon" aria-hidden="true">◎</span>
+    <span class="toggle__text" data-motion-label>{t(lang, 'motion.system')}</span>
+  </button>
+</div>
+
+<style>
+  .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 2.75rem; /* 44px touch target */
+    min-width: 2.75rem;
+    padding: 0.25rem 0.625rem;
+    background-color: transparent;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-button);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      border-color 180ms ease-out,
+      color 180ms ease-out;
+  }
+
+  .toggle:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .toggle__icon {
+    font-size: 0.875rem;
+  }
+
+  /* Text label is hidden below 1024px to keep the header from wrapping. */
+  @media (max-width: 64rem) {
+    .toggle__text {
+      display: none;
+    }
+    .toggle {
+      padding-inline: 0.375rem;
+    }
+  }
+</style>
