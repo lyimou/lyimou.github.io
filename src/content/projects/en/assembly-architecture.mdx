@@ -1,0 +1,63 @@
+---
+title: 'Assembly and Computer Architecture'
+summary: 'MIPS assembly and the hardware underneath it: the instruction set, memory hierarchy and how a processor actually executes a loop.'
+category: 'course'
+tech: ['MIPS Assembly', 'C++', 'Digital Logic']
+role: 'Sole author of the assembly and simulator work'
+status: 'complete'
+featured: false
+order: 4
+lang: 'en'
+translationKey: 'assembly-architecture'
+pubDate: 2026-09-13
+---
+
+{/* CONTENT PROVENANCE — PLEASE REVIEW CAREFULLY
+    This is the project I am least certain about, because the source folder is
+    mostly lecture PDFs and a small amount of code (.s and .asm files plus a few
+    C++ files). The specific exercises below are INFERRED from the folder
+    contents and from what this kind of course normally covers; they are NOT
+    verified against your actual submissions.
+    Treat every claim in "What it is" as provisional and correct anything that
+    does not match what you actually did. */}
+
+## What it is
+
+Coursework in the layer below software: writing and reading **MIPS assembly**, and understanding what the processor does while that assembly runs.
+
+The work in this repository is small in file count but different in kind from the other projects — there is no library to lean on and no abstraction to hide behind. Every operation that a high-level language gives you for free has to be built from loads, stores, branches and arithmetic.
+
+## What the work involved
+
+{/* AUTHOR: verify each of these against what you actually submitted. */}
+
+- **MIPS assembly programs** (`.s` / `.asm`) — register conventions, stack frames, and calling conventions.
+- **Bit-level and memory-level thinking** — the difference between a value and its address, and why endianness and alignment are not trivia once you are writing the load and store instructions yourself.
+- **The memory hierarchy** — why a cache hit and a cache miss are not the same operation, and what that means for the loops you write.
+- **Small simulators in C++** — modelling the machine rather than using it, which forces every implicit decision to become explicit.
+
+## Why this changed how I write code
+
+The gap between "this loop is O(n)" and "this loop is O(n) but touches memory in a pattern the cache hates" is invisible at the C++ level and obvious once you have drawn the memory accesses yourself.
+
+Two ideas stuck:
+
+- **A calling convention is a contract, not a suggestion.** Whoever wrote the caller is assuming you preserved exactly the registers the convention says you must. Break it and the bug shows up somewhere else entirely.
+- **Pipelines are why branch instructions cost more than arithmetic.** The hardware is already fetching ahead; a branch makes it guess. That single fact explains a lot of performance advice that otherwise sounds like folklore.
+
+## What I learned
+
+- **Reading a specification closely is most of the work.** An instruction set reference is precise, and precise documents reward careful reading.
+- **Debugging at this level is different** — there is no stack trace, so the state of the machine has to be reasoned about directly.
+- **Small code can be hard code.** A thirty-line assembly routine can be harder to get right than a three-hundred-line C++ program, because nothing is inferred for you.
+
+## What I would do differently
+
+{/* AUTHOR: please rewrite this in your own words. */}
+
+I would trace more and guess less. Early on I wrote assembly, ran it, and then reasoned backwards from the failure. Writing out the register state by hand before running anything would have been faster.
+
+## Technical notes
+
+- **Languages:** MIPS assembly, C++
+- **Repository:** private — this folder is predominantly course material and only a small part of it is my own code

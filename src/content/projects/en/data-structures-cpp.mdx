@@ -1,0 +1,61 @@
+---
+title: 'Data Structures in C++'
+summary: 'Hand-written containers and three assignment programs: a prefix trie, a key-value BST behind an LRU cache, and reference-counted smart pointers.'
+category: 'course'
+tech: ['C++11', 'Templates', 'RAII', 'Data Structures']
+role: 'Sole author of the implementations — the course supplied class interfaces and sample data'
+status: 'complete'
+featured: true
+order: 2
+lang: 'en'
+translationKey: 'data-structures-cpp'
+pubDate: 2026-09-13
+---
+
+{/* CONTENT PROVENANCE
+    Every technical claim below is grounded in files that exist in the private
+    coursework repository (trie.hpp, bst.tpp, lru_cache.tpp, shared_ptr.h,
+    weak_ptr.h, and the three assignment implementations). Line counts and file
+    counts were measured from that repository.
+    The "What I would do differently" section is my own reflection and should be
+    rewritten by the author in his own words.
+    No course names, course codes, assignment briefs or instructor material are
+    reproduced here. */}
+
+## What it is
+
+A set of C++11 containers and three larger programs, written as coursework and kept because the implementations are the interesting part:
+
+- **A prefix trie** (`trie.hpp`, ~435 lines) supporting insert, prefix search and removal.
+- **A key-value BST** as a template with its implementation split across a header and a `.tpp`, with an **LRU cache** layered on top of it.
+- **`shared_ptr` and `weak_ptr` written by hand** — control blocks, reference counts and the weak/strong distinction.
+- **Three assignment programs**: a course-partner matcher, a media-recommendation engine over list/group models, and a student-record store built on the trie.
+
+## The parts worth explaining
+
+**Splitting a template across `.h` and `.tpp`.** A template's definitions have to be visible where they are instantiated, so the implementation cannot live in a separate translation unit. Getting this layout right — and the include order that goes with it — is what made the BST usable from more than one place.
+
+**Writing `shared_ptr` yourself changes how you think about ownership.** The implementation needs a reference-counted control block, and `weak_ptr` exists to break the cycle where two objects hold strong references to each other. Reading about reference cycles is very different from watching your own leak disappear when you switch one edge to a weak pointer.
+
+**A trie is a choice, not an upgrade.** Compared with a hash map, the trie costs more memory and does worse on exact lookup, but it answers "everything starting with these characters" without scanning the whole key set. Building one made the trade-off concrete rather than theoretical.
+
+**An LRU cache is really a pairing.** The cache needs O(1) membership and O(1) eviction, which means a map *and* an ordering structure together, with every operation keeping both in agreement. Nearly all the bugs live in that agreement.
+
+## What I learned
+
+- **RAII is the whole game in C++.** Ownership has to be expressed in the type, not in a comment, or the first early return leaks.
+- **Templates live in headers**, and a stray `#include` between the header and its `.tpp` produces a redefinition error that only appears at instantiation — so the compiler error points somewhere unhelpful.
+- **Debugging memory is a different skill** from debugging logic. Sanitizer builds found problems that print statements never would have.
+- **Matching a specification exactly** — formatting, ordering, edge cases — is a discipline of its own, separate from writing an algorithm that is "right".
+
+## What I would do differently
+
+{/* AUTHOR: please rewrite this in your own words. */}
+
+Write tests before the implementation rather than checking against sample output at the end. Every one of these structures would have been faster to finish with a small test harness driving it from the start, because most of the time went into discovering edge cases one at a time.
+
+## Technical notes
+
+- **Languages:** C++11
+- **Build:** each program originally built with `make`; the sources are now published as implementation excerpts, so they compile as part of a project rather than standalone
+- **Repository:** private, since the surrounding assignment material is not mine to redistribute

@@ -13,8 +13,63 @@ translationKey: 'arduino-mnist-inference'
 pubDate: 2026-09-13
 ---
 
-{/* T1 placeholder body. Real narrative is written in T5 and must be reviewed by the author. */}
+{/* CONTENT PROVENANCE
+    Grounded in the public repository: CNN_small.py, CNN_2_train.py,
+    CNN_1_prep_txt.py, CNN_3_serial.py, the Arduino sketches, and the committed
+    measurement CSVs (results_strict.csv = 1139/1500, results_optimized.csv = 73/100).
+    Numbers are quoted from those files, not estimated.
+    The "Where it stands" section states the unverified hardware result plainly;
+    do not remove that caveat unless you actually re-run the board. */}
 
-The project trains a small dense network on 14×14 binarised MNIST digits, exports the
-weights as C arrays for the microcontroller, and then measures how well the board
-classifies digits it receives over serial.
+## What it is
+
+The idea was to take a model that normally lives on a PC and shrink it until it fits inside an 8-bit microcontroller — then prove it works by feeding the board images one at a time and scoring the answers.
+
+Three things had to happen in order:
+
+1. **Shrink the input.** Full 28×28 grayscale digits are far too much data for an Arduino's flash. Images are downscaled to 14×14 and binarised, giving 196 bits per digit.
+2. **Shrink the model.** A small dense network (`Dense(8, sigmoid, MaxNorm(3))` → `BatchNormalization` → `Dense(10)`) trained in Keras, then quantised to `int8` with one scale factor per weight matrix.
+3. **Move the weights and the protocol to the board.** Weights are emitted as `PROGMEM` C arrays; the PC sends a 196-character `0`/`1` string over serial and reads back `Prediction:<digit>`.
+
+All classification happens on the Arduino. The PC only prepares the input and grades the output.
+
+## The measurement pipeline
+
+The part I would point at first is not the model — it is the harness around it.
+
+`CNN_3_serial.py` opens the serial port, waits for a `READY` handshake, flushes the buffer before every image, re-opens the port if a read fails, and writes one row per image to a CSV with `image_index, true_label, predicted_label, is_correct`. That is what turns "the model works" into a number.
+
+## Results
+
+| Run | Samples | Correct | Accuracy |
+| --- | --- | --- | --- |
+| Strict evaluation (Python) | 1500 | 1139 | **75.9%** |
+| Optimised evaluation (Python) | 100 | 73 | **73.0%** |
+
+## Where it stands
+
+**On-device accuracy is not verified.** The hardware run never wrote a result file, so no figure for the Arduino itself appears here — only the two Python-side numbers above, both reproducible from the committed CSVs.
+
+There is also a known inconsistency I chose not to hide: the committed `arduino/cnn_int8/arduino_weights.h` declares `HIDDEN_SIZE 16` with float32 weights, while `CNN_small.py` exports 8 units as int8. The two were generated at different points in the project, so the header must be regenerated before flashing that sketch.
+
+## Why the accuracy is not higher
+
+~75% is well below what this approach could reach, and the pipeline says why:
+
+- **14×14 nearest-neighbour downscaling destroys strokes.** Thin or slanted digits lose the detail that distinguishes them.
+- **A fixed threshold at 128 throws away grayscale.** Anti-aliased edges carry real information that binarisation discards.
+- **The baseline's hidden layer is not trained at all.** It generates weights from a chaotic map, so it cannot adapt to the data.
+
+## What I learned
+
+- **Quantisation is where the accuracy goes**, but the normalisation bounds and the input threshold mattered more to the final number than the network size.
+- **Serial I/O is a state machine, not a function call.** Buffer resets, partial reads, timeouts and re-opening the port after a failure were the bulk of the debugging — not the model.
+- **Flash is the real constraint.** Deciding what belongs in `PROGMEM`, and in what form, is what determines whether the network fits.
+- **Input representation beats depth.** Two quite different architectures landed in the same accuracy band, because both were fed the same lossy 196-bit input.
+- **Keep one source of truth for generated artefacts.** The header/exporter mismatch above exists precisely because they drifted apart.
+
+## What I would do differently
+
+{/* AUTHOR: please rewrite this in your own words. */}
+
+Re-run the board measurement first and treat the Python number as secondary. The Python score was always going to be the optimistic one; the interesting engineering question is what survives the trip to hardware.

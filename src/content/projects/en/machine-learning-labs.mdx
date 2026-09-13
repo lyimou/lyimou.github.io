@@ -1,0 +1,63 @@
+---
+title: 'Machine Learning from Scratch'
+summary: 'Implementing k-nearest neighbours and naive Bayes by hand before using scikit-learn, then comparing them on real lab datasets.'
+category: 'course'
+tech: ['Python', 'NumPy', 'scikit-learn', 'Jupyter']
+role: 'Sole author of the lab implementations and write-ups'
+status: 'complete'
+featured: true
+order: 3
+lang: 'en'
+translationKey: 'machine-learning-labs'
+pubDate: 2026-09-13
+---
+
+{/* CONTENT PROVENANCE
+    Grounded in the private repository's contents: lab01–lab08 notebooks (the
+    labs present are 01, 02, 04, 06, 07, 08), KNN_ex.py, Naive_bayes_ex.py,
+    daily_ex.py, and per-lab train/test CSV splits.
+    Each lab exists twice: a guided *_review notebook and an independent *_task
+    notebook plus a .py version.
+    The "What I learned" section restates what the code shows; rewrite in your
+    own words if you prefer. */}
+
+## What it is
+
+A set of machine-learning lab notebooks covering the classic algorithms, with one deliberate constraint: **implement the algorithm before calling the library**, then compare the two.
+
+Topics covered: distance-based classification (k-NN), probabilistic classification (naive Bayes), regression/classification on tabular data, model evaluation and selection, clustering, and a first neural network.
+
+## The pattern that made it work
+
+Every topic exists twice:
+
+- a **guided notebook** that walks through the method with explanations and plots, and
+- an **independent notebook** (plus a `.py` version) where the same task is solved without the walkthrough.
+
+Writing k-NN by hand first is what made the library version legible. Once you have chosen a distance metric and decided how to break ties yourself, `KNeighborsClassifier` stops being a black box and becomes a set of defaults you can reason about.
+
+## Evaluation is where the real lessons were
+
+The evaluation lab is the one that changed how I read results. A single accuracy number hides almost everything that matters:
+
+- **Precision and recall disagree** on uneven classes, and which one you care about depends on the cost of each error type.
+- **A confusion matrix shows *which* mistakes** are being made — repeatedly confusing two similar classes is a different problem from scattered noise.
+- **Preprocessing can leak.** Fitting a scaler or an encoder on the whole dataset before splitting quietly inflates every score, because the test set influenced the transformation.
+
+## What I learned
+
+- **Implementing before importing** turns a library call into an informed decision.
+- **Reproducibility is not optional.** Stored notebook outputs are not results; only the code plus a fixed seed is. Every notebook in this repository ships with its outputs stripped, which also keeps the diffs readable.
+- **Data preparation is most of the work.** The `.py` pipeline steps (resize, binarise, flatten) mattered more to the final score than the choice of model.
+- **The sequence has gaps** — the labs present are not a complete numbered run. Saying so is more useful than implying full coverage.
+
+## What I would do differently
+
+{/* AUTHOR: please rewrite this in your own words. */}
+
+Pick one dataset and go deep instead of touching a new algorithm each week. Two weeks spent tuning one model and understanding its failure modes would have taught more than six weeks of first contact.
+
+## Technical notes
+
+- **Languages:** Python (NumPy, pandas, scikit-learn, Matplotlib), Jupyter
+- **Repository:** private — the lab scaffolding started from provided material, so only the task implementations are mine
