@@ -8,23 +8,6 @@ The site is deliberately **light-first, desktop-first, and low-JS**: the whole J
 
 ---
 
-## Status
-
-This project is being built in stages. Current state:
-
-| Stage | Scope | State |
-| --- | --- | --- |
-| T1 | Project skeleton: config, i18n routing, content schemas, base layout, placeholder routes | ✅ done |
-| T2 | Design system: tokens, dark mode, typography, atomic components | ⏳ next |
-| T3 | Page implementation (home, projects, blog, about, search, 404) | — |
-| T4 | Interactive islands (typing effect, project filter, TOC, reading progress, code copy, Pagefind) | — |
-| T5 | Real content | — |
-| T6 | SEO, RSS, OG images, deployment verification | — |
-
-The authoritative specification lives outside this repository in `website-requirements.md`.
-
----
-
 ## Requirements
 
 - Node.js **>= 22.12** (developed on 24.x)
