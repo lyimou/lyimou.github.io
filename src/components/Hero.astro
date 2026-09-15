@@ -31,6 +31,15 @@ const { lang, headline, phrases } = Astro.props;
       {t(lang, 'nav.projects')}
     </a>
     <a class="hero__btn" href={localizePath(lang, '/about')}>{t(lang, 'nav.about')}</a>
+    {/*
+      The résumé is a single static file in public/, so the path needs no
+      localisation. `download` asks the browser to save rather than open it,
+      which matters because a PDF opened in a tab is a worse first impression
+      than one saved next to a job application. The href is root-absolute and
+      this site deploys at the domain root, so it resolves to
+      https://lyimou.github.io/Andy_Huang_Resume.pdf
+    */}
+    <a class="hero__btn" href="/Andy_Huang_Resume.pdf" download>{t(lang, 'hero.resume')}</a>
   </div>
 </section>
 

@@ -19,6 +19,8 @@ export const ui = {
     'site.description':
       'Personal site and technical blog of Andy Huang — Computer Science student at HKUST, working mostly in C++ and Python.',
 
+    'hero.resume': 'Download résumé (PDF)',
+
     'nav.home': 'Home',
     'nav.projects': 'Projects',
     'nav.blog': 'Blog',
@@ -82,6 +84,8 @@ export const ui = {
     'site.title': '黃浩華',
     'site.tagline': '香港科技大學計算機科學學生',
     'site.description': '黃浩華（Andy Huang）的個人網站與技術博客 —— 香港科技大學計算機科學學生，主要使用 C++ 與 Python。',
+
+    'hero.resume': '下載履歷（PDF）',
 
     'nav.home': '首頁',
     'nav.projects': '項目',
