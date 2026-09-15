@@ -158,9 +158,10 @@ const photos = Object.entries(modules)
             Replace the placeholder with a sentence for this photo, or delete the
             entire <p> element to show the photograph with no caption. The
             {{Photo N Caption}} text is deliberately conspicuous so it cannot
-            ship by accident.
+            ship by accident. 
+            Note: you should keep empty if the text is not yet determined
           */}
-          <p class="photo-card__caption">{`{{Photo ${photo.index} Caption}}`}</p>
+          <p class="photo-card__caption">{``}</p>
         </li>
       ))
     }
