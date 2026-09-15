@@ -25,6 +25,7 @@ export const ui = {
     'nav.projects': 'Projects',
     'nav.blog': 'Blog',
     'nav.about': 'About',
+    'nav.creative': 'Creative',
     'nav.search': 'Search',
 
     'section.featured': 'Featured projects',
@@ -63,6 +64,23 @@ export const ui = {
     'about.skills.familiar': 'Familiar with',
     'about.skills.languages': 'Languages',
 
+    // Creative section — video editing and photography.
+    'creative.title': 'Creative',
+    'creative.lede':
+      'Work outside code: short films I have edited, and photographs I have taken.',
+    'creative.video.title': 'Video Editing',
+    'creative.video.lede':
+      'Pieces I have cut, graded and finished. Playback loads from YouTube only after you press play.',
+    'creative.video.shortsNote': 'Vertical (9:16)',
+    'creative.video.inno.desc':
+      'A short introduction piece for the Inno team — shot on location and cut to a music bed.',
+    'creative.video.pku.desc':
+      'A vertical cut from the Peking University exchange, edited for a phone-first audience.',
+    'creative.video.time.desc':
+      'An explainer on the Pomodoro technique, built around motion graphics and on-screen typography.',
+    'creative.photo.title': 'Photography',
+    'creative.photo.lede': 'A selection of photographs I have taken.',
+
     'notfound.title': 'Page not found',
     'notfound.body': 'That page does not exist.',
     'notfound.home': 'Back to home',
@@ -91,6 +109,7 @@ export const ui = {
     'nav.projects': '項目',
     'nav.blog': '文章',
     'nav.about': '關於',
+    'nav.creative': '創作',
     'nav.search': '搜尋',
 
     'section.featured': '精選項目',
@@ -128,6 +147,18 @@ export const ui = {
     'about.skills.built': '實際項目中使用',
     'about.skills.familiar': '熟悉',
     'about.skills.languages': '語言',
+
+    // Creative section — video editing and photography.
+    'creative.title': '創作',
+    'creative.lede': '寫程式以外的事：我剪輯的短片，以及我拍的照片。',
+    'creative.video.title': '影片剪輯',
+    'creative.video.lede': '我剪接、調色與完成的作品。按下播放後才會從 YouTube 載入。',
+    'creative.video.shortsNote': '直式（9:16）',
+    'creative.video.inno.desc': 'Inno 團隊的短片介紹 —— 實地拍攝，配上音樂剪輯。',
+    'creative.video.pku.desc': '北京大學交換的直式短片，以手機觀看為前提剪輯。',
+    'creative.video.time.desc': '番茄工作法的解說影片，以動態圖像與畫面文字構成。',
+    'creative.photo.title': '攝影',
+    'creative.photo.lede': '我拍攝的照片選集。',
 
     'notfound.title': '找不到頁面',
     'notfound.body': '此頁面不存在。',

@@ -1,0 +1,321 @@
+---
+/**
+ * Creative — video editing and photography.
+ *
+ * Rendered by both `/creative/` and `/zh/creative/` so the two locales cannot
+ * drift apart. (The older About page duplicates its whole body per language,
+ * which means every edit has to be made twice; this component avoids that.)
+ *
+ * Two things differ from a plain static page, and both are deliberate:
+ *
+ *  1. Images are processed through `astro:assets` rather than copied verbatim.
+ *     The source photographs are 4K originals (the largest is 10.9 MB); served
+ *     as-is a single visit would pull ~34 MB. Astro resizes them to the widths
+ *     this grid actually renders and emits modern formats, so the *shipped*
+ *     payload is a small fraction of that while the originals stay in the repo
+ *     as the source of truth.
+ *  2. The YouTube embeds use `youtube-nocookie.com`, so no cookies are set until
+ *     the viewer presses play, and every iframe declares its `title` for screen
+ *     readers.
+ */
+import { Image } from 'astro:assets';
+import SectionHeading from './SectionHeading.astro';
+import Prose from './Prose.astro';
+import { t } from '../i18n/ui';
+import type { Lang, UIKey } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+
+/** Shape of one video card. `descKey` is typed as UIKey so `t()` accepts it. */
+interface VideoEntry {
+  id: string;
+  orientation: 'landscape' | 'portrait';
+  title: string;
+  descKey: UIKey;
+}
+
+/**
+ * Video IDs and orientation.
+ *
+ * Titles are taken from YouTube's own oEmbed metadata, so they match the
+ * uploads as published. Descriptions are keyed so they exist in both languages.
+ *
+ * TO CHANGE A VIDEO: edit `id` (the part after `youtu.be/` or `/shorts/`).
+ * If you swap in a video with a different orientation, change `orientation` too.
+ */
+const videos: VideoEntry[] = [
+  { id: '267GGbbbODE', orientation: 'landscape', title: 'Inno team intro', descKey: 'creative.video.inno.desc' },
+  { id: 'xnNnFbM8824', orientation: 'portrait', title: 'PKU Exchange', descKey: 'creative.video.pku.desc' },
+  { id: 'Pr49AXy1mp4', orientation: 'landscape', title: 'Time management for S.5 students', descKey: 'creative.video.time.desc' },
+];
+
+/**
+ * Photographs, in filename order. `import.meta.glob` is resolved at build time,
+ * so the originals are optimised and hashed like any other asset — nothing here
+ * is fetched at runtime.
+ *
+ * TO ADD OR REMOVE PHOTOS: drop files into
+ * `src/assets/creative/photography/` named `photo1.jpg`, `photo2.jpg`, … and
+ * this list picks them up automatically. Sorting is numeric, so photo10 follows
+ * photo9 rather than photo1.
+ */
+const modules = import.meta.glob<{ default: ImageMetadata }>(
+  '../assets/creative/photography/*.{jpg,jpeg,png,webp}',
+  { eager: true },
+);
+
+const photos = Object.entries(modules)
+  .sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true }))
+  .map(([path, mod]) => ({
+    src: mod.default,
+    index: Number(path.match(/photo(\d+)/)?.[1] ?? 0),
+  }));
+---
+
+<h1>{t(lang, 'creative.title')}</h1>
+<Prose>
+  <p>{t(lang, 'creative.lede')}</p>
+</Prose>
+
+<!-- ============================== VIDEO ============================== -->
+<section class="block" id="video">
+  <SectionHeading>{t(lang, 'creative.video.title')}</SectionHeading>
+  <p class="muted">{t(lang, 'creative.video.lede')}</p>
+
+  <ul class="video-grid">
+    {
+      videos.map((video) => (
+        <li class="video-card">
+          <div class="video-card__head">
+            <h3 class="video-card__title">{video.title}</h3>
+            {video.orientation === 'portrait' && (
+              <span class="video-card__badge">{t(lang, 'creative.video.shortsNote')}</span>
+            )}
+          </div>
+
+          {/*
+            The wrapper owns the shape via `aspect-ratio`, so the layout reserves
+            the right space before the player loads and the page does not jump.
+            `loading="lazy"` defers the player until it nears the viewport, and
+            youtube-nocookie.com sets no cookies until playback starts.
+          */}
+          <div
+            class:list={[
+              'video-card__frame',
+              video.orientation === 'portrait' && 'video-card__frame--portrait',
+            ]}
+          >
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${video.id}`}
+              title={video.title}
+              loading="lazy"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            ></iframe>
+          </div>
+
+          <p class="video-card__desc">{t(lang, video.descKey)}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<!-- =========================== PHOTOGRAPHY =========================== -->
+<section class="block" id="photography">
+  <SectionHeading>{t(lang, 'creative.photo.title')}</SectionHeading>
+  <p class="muted">{t(lang, 'creative.photo.lede')}</p>
+
+  <ul class="photo-grid">
+    {
+      photos.map((photo) => (
+        <li class="photo-card">
+          <div class="photo-card__frame">
+            {/*
+              Widths are sized to what this grid actually renders. A 3-column
+              cell is roughly 365px wide, so 800px already covers a 2x display;
+              the earlier 1000px ceiling was pure waste on the heaviest files.
+              `format="webp"` and `quality` keep the shipped payload down — the
+              originals are 4K camera JPEGs, one of them 10.9 MB.
+            */}
+            <Image
+              src={photo.src}
+              alt={`Photograph ${photo.index}`}
+              widths={[350, 550, 800]}
+              sizes="(max-width: 40rem) 92vw, (max-width: 64rem) 46vw, 30vw"
+              format="webp"
+              quality={72}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          {/*
+            CAPTIONS — PUT YOUR TEXT HERE.
+            Replace the placeholder with a sentence for this photo, or delete the
+            entire <p> element to show the photograph with no caption. The
+            {{Photo N Caption}} text is deliberately conspicuous so it cannot
+            ship by accident.
+          */}
+          <p class="photo-card__caption">{`{{Photo ${photo.index} Caption}}`}</p>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<style>
+  /* ------------------------------------------------------------------ layout */
+  .block {
+    margin-block: 3.5rem;
+  }
+
+  .muted {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  /* ------------------------------------------------------------------ videos */
+  .video-grid {
+    display: grid;
+    gap: 1.75rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .video-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .video-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .video-card__title {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  .video-card__badge {
+    padding: 0.1rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  /*
+    The frame owns the shape; the iframe fills it. 16:9 by default, and the
+    portrait modifier narrows it to the 9:16 shape a Shorts upload actually is —
+    otherwise a vertical video sits letterboxed inside a wide player with black
+    bars down both sides.
+  */
+  .video-card__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  .video-card__frame--portrait {
+    aspect-ratio: 9 / 16;
+    /* Keep a tall frame from dominating the row: cap the width and centre it. */
+    max-width: 20rem;
+    margin-inline: auto;
+  }
+
+  .video-card__frame iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .video-card__desc {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  /* ------------------------------------------------------------- photographs */
+  /*
+    Masonry via CSS multi-column, so every photograph keeps its own aspect ratio
+    instead of being force-cropped into a shared frame.
+
+    Why not a uniform grid: the set is 8 landscape (16:9) and 6 portrait (9:16).
+    Measured against each candidate frame shape, a 3:2 box keeps 84% of a
+    landscape photo but only 38% of a portrait one; a square box is the "best"
+    fixed compromise at 56% for both — which is worse for the landscape shots
+    than simply not cropping. Columns avoid the loss entirely.
+
+    Swapping to a uniform grid is a small change if you prefer the tidier
+    rhythm: replace this block with
+        display: grid; gap: 1.25rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    and give .photo-card__frame an `aspect-ratio` plus `object-fit: cover`.
+
+    Trade-off: multi-column flows top-to-bottom per column, so reading order is
+    column-by-column rather than left-to-right. That is fine for a gallery and is
+    the standard masonry behaviour.
+  */
+  .photo-grid {
+    columns: 1;
+    column-gap: 1.25rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .photo-card {
+    break-inside: avoid;
+    margin-bottom: 1.25rem;
+  }
+
+  .photo-card__frame {
+    overflow: hidden;
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+  }
+
+  .photo-card__frame :global(img) {
+    display: block;
+    width: 100%;
+    height: auto; /* natural ratio — no crop, no distortion */
+  }
+
+  .photo-card__caption {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9375rem;
+  }
+
+  /* ------------------------------------------------------------ breakpoints */
+  @media (min-width: 40rem) {
+    .photo-grid {
+      columns: 2;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .photo-grid {
+      columns: 3;
+    }
+
+    /* Two videos side by side reads better than a row of three. */
+    .video-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>

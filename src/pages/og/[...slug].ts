@@ -52,6 +52,13 @@ const pages: Record<string, CardData> = Object.fromEntries([
     `zh/${slugOf(post.id)}`,
     { title: post.data.title, description: post.data.description },
   ]),
+  /*
+   * Standing pages get a card too, otherwise `ogImage` on them points at a
+   * route that was never generated and the social preview 404s.
+   * One locale-agnostic card at /og/creative.png serves both /creative/ and
+   * /zh/creative/.
+   */
+  ['creative', { title: 'Creative', description: 'Video editing and photography.' }],
 ]);
 
 export const { getStaticPaths, GET } = await OGImageRoute({

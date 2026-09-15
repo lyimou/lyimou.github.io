@@ -27,6 +27,7 @@ const pages = [
   ['project-detail', '/projects/arduino-mnist-inference/'],
   ['blog', '/blog/'],
   ['tags', '/tags/'],
+  ['creative', '/creative/'],
   ['about', '/about/'],
   ['search', '/search/'],
   ['components', '/dev/components/'],
@@ -34,6 +35,7 @@ const pages = [
   ['zh-projects', '/zh/projects/'],
   ['zh-project-detail', '/zh/projects/arduino-mnist-inference/'],
   ['zh-tags', '/zh/tags/'],
+  ['zh-creative', '/zh/creative/'],
   ['zh-about', '/zh/about/'],
   ['404', '/404.html'],
 ];

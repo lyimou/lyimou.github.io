@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CreativeBody from '../components/CreativeBody.astro';
+import { t } from '../i18n/ui';
+
+const lang = 'en' as const;
+---
+
+<BaseLayout
+  lang={lang}
+  title={t(lang, 'creative.title')}
+  description={t(lang, 'creative.lede')}
+  ogImage="/og/creative.png"
+>
+  <CreativeBody lang={lang} />
+</BaseLayout>
